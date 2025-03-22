@@ -1,14 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard, faMouse, faHeadphones, faDesktop, faCamera, faVolumeUp, faMicrochip, faPrint, faNetworkWired, faLaptop, faMobileAlt, faHeadphonesAlt } from '@fortawesome/free-solid-svg-icons';
 
 const colors = [
-    'text-black', 'text-blue-500', 'text-green-500', 'text-yellow-500', 'text-black',
-    'text-black', 'text-black', 'text-teal-500', 'text-orange-500', 'text-cyan-500',
-    'text-lime-500', 'text-amber-500'
+    'text-black'
 ];
 const settings = {
     dots: true,
@@ -102,57 +100,95 @@ const newArrivals = [
     { name: "Pro Webcam", price: 149.99 }
 ];
 
-export default function Welcome({auth}) {
+export default function Welcome({ auth }) {
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    // Assuming images are in public/images directory
+    const slideshowImages = [
+        '/images/Capture1.jpg',
+        '/images/Capture2.jpg',
+        '/images/Capture3.jpg',
+    ];
+
+    useEffect(() => {
+        console.log('Slideshow running, current image:', slideshowImages[currentImageIndex]);
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prevIndex) =>
+                (prevIndex + 1) % slideshowImages.length
+            );
+        }, 3000); // Change every 3 seconds
+
+        return () => clearInterval(interval);
+    }, [currentImageIndex, slideshowImages.length]);
+
     return (
         <>
             <Head title="Home" />
             <NavBar auth={auth} />
 
             <main className="p-4 sm:p-6 md:p-8">
-  {/* Top Section with Category and Image */}
-  <div className="flex flex-col md:flex-row mb-12">
-    {/* Category Section - Left */}
-    <div className="md:w-1/2 pr-4 mb-6 md:mb-0 lg:ml-7">
-    <h1 className="text-2xl font-extrabold mb-4 md:mt-20 mt-14 ml-28 sd:ml-7 md:ml-16 bg-gradient-to-r from-blue-600 via-teal-500 to-green-600 bg-clip-text text-transparent tracking-tight relative group animate-water-flow">
-  <span className=" absolute -bottom-1 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500 transform scale-x-110 group-hover:scale-x-105 transition-transform duration-300 ease-in-out -ml-9"></span>
-    Featured Category
-</h1>
+                {/* Top Section with Category and Image */}
+                <div className="flex flex-col md:flex-row mb-12">
+                    {/* Category Section - Left */}
+                    <div className="md:w-1/2 pr-4 mb-6 md:mb-0 lg:ml-7">
+                        <h1 className="text-2xl font-extrabold mb-4 md:mt-20 mt-14 ml-28 sd:ml-7 md:ml-16 bg-gradient-to-r from-blue-600 via-teal-500 to-green-600 bg-clip-text text-transparent tracking-tight relative group animate-water-flow">
+                            <span className="absolute -bottom-1 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500 transform scale-x-110 group-hover:scale-x-105 transition-transform duration-300 ease-in-out -ml-9"></span>
+                            Featured Category
+                        </h1>
+                        <div className="grid grid-cols-5 gap-2">
+                            {Category.map((item, index) => (
+                                <Link
+                                    key={index}
+                                    to={`/Category/${item.name.toLowerCase()}`}
+                                    className={`card relative bg-gradient-to-br from-${colors[index % colors.length].split('-')[1]}-200 to-${colors[(index + 1) % colors.length].split('-')[1]}-300 shadow-lg rounded-lg p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl hover:bg-gradient-to-br hover:from-${colors[index % colors.length].split('-')[1]}-300 hover:to-${colors[(index + 1) % colors.length].split('-')[1]}-400 group`}
+                                >
+                                    <div className="flex flex-col items-center justify-center">
+                                        <FontAwesomeIcon
+                                            icon={item.icon}
+                                            className="text-3xl mb-2 text-black transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse"
+                                        />
+                                        <h2 className="text-sm font-bold text-black group-hover:text-gray-700 transition-colors duration-300">
+                                            {item.name}
+                                        </h2>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
 
-      <div className="grid grid-cols-5 gap-2">
-        {Category.map((item, index) => (
-          <Link
-            key={index}
-            to={`/Category/${item.name.toLowerCase()}`}
-            className={`bg-gradient-to-br from-${colors[index % colors.length].split('-')[1]}-200 to-${colors[(index + 1) % colors.length].split('-')[1]}-300 shadow-lg rounded-lg p-4 text-center border-2 border-${colors[index % colors.length].split('-')[1]}-400 transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl hover:ring-4 hover:ring-${colors[index % colors.length].split('-')[1]}-400/50 hover:bg-gradient-to-br hover:from-${colors[index % colors.length].split('-')[1]}-300 hover:to-${colors[(index + 1) % colors.length].split('-')[1]}-400 group`}
-          >
-            <div className="flex flex-col items-center justify-center">
-              <FontAwesomeIcon
-                icon={item.icon}
-                className={`text-3xl mb-2 text-${colors[index % colors.length].split('-')[1]}-700 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse`}
-              />
-              <h2 className={`text-sm font-bold text-${colors[index % colors.length].split('-')[1]}-900 group-hover:text-${colors[index % colors.length].split('-')[1]}-600 transition-colors duration-300`}>
-                {item.name}
-              </h2>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-
-                    {/* Image-section-Right */}
-  {/* Image-section-Right */}
-{/* Image-section-Right */}
-<div className="md:w-2/3 pl-4 lg:mt-28 md:mt-28 sd:mt-2 lg:mr-7 ">
-    <div className="bg-white shadow-md rounded-xl border border-gray-100 h-48 md:h-96 flex items-center justify-center">
-        <img src="/images/Capture1.PNG" alt="Image" className="w-full h-full object-cover rounded-xl" />
-    </div>
-</div>
-
+                    {/* Image-section-Right with Slideshow and Navigation Bars */}
+                    <div className="md:w-2/3 pl-4 lg:mt-28 md:mt-28 sd:mt-2 lg:mr-7">
+                        <div className="bg-white shadow-md rounded-xl border border-gray-100 h-48 md:h-96 flex items-center justify-center overflow-hidden relative">
+                            {slideshowImages.length > 0 ? (
+                                <img
+                                    src={slideshowImages[currentImageIndex]}
+                                    alt={` Image ${currentImageIndex + 1}`}
+                                    className="w-full h-full object-cover rounded-xl transition-opacity duration-500 ease-in-out"
+                                    onError={() => console.log(`Failed to load image: ${slideshowImages[currentImageIndex]}`)}
+                                />
+                            ) : (
+                                <p className="text-gray-500">No images available</p>
+                            )}
+                        </div>
+                        {/* Navigation Bars (Dots) */}
+                        <div className="flex justify-center mt-2 space-x-2">
+                            {slideshowImages.map((_, index) => (
+                                <div
+                                    key={index}
+                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                                        currentImageIndex === index
+                                            ? 'bg-blue-400 scale-125'
+                                            : 'bg-gray-300'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Featured Products */}
                 <h1 className="text-2xl font-bold text-center mb-6 mt-0">Featured Products</h1>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7 ">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
                     {featuredProducts.map((product, index) => (
                         <div
                             key={index}

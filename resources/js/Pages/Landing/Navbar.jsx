@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars, faTimes, faSignInAlt, faUserPlus, faSearch, faSignOutAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faTimes, faSignInAlt, faUserPlus, faSearch, faSignOutAlt, faShoppingCart, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '@inertiajs/react';
 import LoginModal from '@/Pages/Landing/LoginModal';
 import RegistrationModal from '@/Pages/Landing/RegistrationModal';
 
-function Navbar({ auth }) {
+function Navbar({ auth, cartCount = 0 }) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
@@ -39,65 +39,133 @@ function Navbar({ auth }) {
         Inertia.get('/search', { query: searchQuery });
     };
 
+    const authButtonStyles = "px-5 py-2 text-sm text-gray-100 font-medium tracking-wide uppercase rounded-full bg-gray-800/80 border border-gray-700/50 hover:bg-gray-700 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500/30 transition-all duration-300 flex items-center gap-2 shadow-sm";
+
     return (
         <header>
-            <nav className="z-50 fixed top-0 w-full p-4 bg-gradient-to-r from-emerald-300 to-emerald-600 backdrop-blur-md shadow-lg transition-all duration-300">
-                <div className="flex flex-wrap items-center max-w-7xl mx-auto px-6 lg:px-8">
-                    <div className="flex items-center w-full md:w-auto">
-                        <Link href="/" className="text-3xl font-semibold text-gray-900 tracking-wide hover:text-white transition duration-300 lg:ml-[-100px]">
+            <nav className="z-50 fixed top-0 w-full p-4 bg-gradient-to-r from-gray-900/95 to-black/95 backdrop-blur-lg shadow-md transition-all duration-500">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Desktop Layout */}
+                    <div className="hidden md:flex items-center justify-between">
+                        {/* Logo */}
+                        <Link href="/" className="text-2xl font-extralight text-white tracking-tight hover:text-gray-200 transition duration-300">
                             Computer Store
                         </Link>
 
-                        {/* Mobile Menu Icon and Search Icon */}
-                        <div className="flex items-center ml-auto gap-4 md:hidden">
-                            <button onClick={toggleSearch} className="text-white text-xl focus:outline-none transition duration-300">
-                                <FontAwesomeIcon icon={searchOpen ? faTimes : faSearch} />
-                            </button>
-                            <button onClick={toggleMenu} className="text-white text-xl focus:outline-none transition duration-300">
-                                <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className={`md:w-auto md:mr-2 transition-all duration-300 ${searchOpen ? 'block mt-4' : 'hidden md:block'}`}>
-                        <form onSubmit={handleSearch} className="relative">
+                        {/* Search Bar (White) with Icon on Right */}
+                        <form onSubmit={handleSearch} className="relative flex-grow max-w-xl mx-8">
                             <input
-                                className="w-full md:w-[600px] lg:w-[600px] h-12 bg-white/70 rounded-full pl-12 pr-12  shadow-md focus:outline-none focus:ring-2 focus:ring-gray-700 transition duration-300 ml-4"
-                                placeholder="Search for products..."
+                                className="w-full h-10 bg-white text-gray-900 rounded-lg pl-4 pr-12 shadow-inner focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300 placeholder-gray-500 text-sm tracking-wide"
+                                placeholder="Search products..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 lg:gap-64">
-                                <FontAwesomeIcon icon={faSearch} />
+                            <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
+                                <FontAwesomeIcon icon={faSearch} size="sm" />
                             </button>
                         </form>
-                    </div>
 
-                    {/* Navbar Links */}
-                    <div className={`ml-auto w-full md:w-auto transition-all duration-300 ${menuOpen ? 'block mt-4' : 'hidden md:flex'}`}>
-                        <div className="flex flex-row gap-2 items-center justify-end w-full md:w-auto ml-auto">
+                        {/* Navigation Links */}
+                        <div className="flex items-center gap-4">
+                            <Link href="/cart" className="relative p-2 text-gray-200 hover:text-white transition duration-300">
+                                <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            </Link>
+                            <Link href="/wishlist" className="p-2 text-gray-200 hover:text-white transition duration-300">
+                                <FontAwesomeIcon icon={faHeart} size="lg" />
+                            </Link>
                             {auth.user ? (
                                 <>
-                                    <Link href="/profile" className="w-full md:w-auto px-4 py-2 text-white font-medium rounded-lg shadow-lg hover:bg-white/30 flex items-center gap-2 justify-center transition duration-300">
+                                    <Link href="/profile" className={authButtonStyles}>
                                         <FontAwesomeIcon icon={faUserPlus} /> Profile
                                     </Link>
-                                    <Link href="/logout" method="post" className="w-full md:w-auto px-4 py-2 text-white font-medium rounded-lg shadow-lg hover:bg-white/30 flex items-center gap-2 justify-center transition duration-300">
-                                        <FontAwesomeIcon icon={faSignOutAlt} /> Log out
+                                    <Link href="/logout" method="post" className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faSignOutAlt} /> Logout
                                     </Link>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={toggleLoginModal} className="w-full md:w-auto px-4 py-2 text-white font-medium rounded-lg shadow-lg hover:bg-white/30 flex items-center gap-2 justify-center transition duration-300">
-                                        <FontAwesomeIcon icon={faSignInAlt} /> Log in
+                                    <button onClick={toggleLoginModal} className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faSignInAlt} /> Login
                                     </button>
-                                    <button onClick={toggleRegistrationModal} className="w-full md:w-auto px-4 py-2 text-white font-medium rounded-lg shadow-lg hover:bg-white/30 flex items-center gap-2 justify-center transition duration-300">
+                                    <button onClick={toggleRegistrationModal} className={authButtonStyles}>
                                         <FontAwesomeIcon icon={faUserPlus} /> Register
                                     </button>
                                 </>
                             )}
                         </div>
                     </div>
+
+                    {/* Mobile Layout */}
+                    <div className="flex md:hidden items-center justify-between">
+                        {/* Logo */}
+                        <Link href="/" className="text-2xl font-extralight text-white tracking-tight hover:text-gray-200 transition duration-300">
+                            Computer Store
+                        </Link>
+
+                        {/* Mobile Toggles */}
+                        <div className="flex items-center gap-4">
+                            <button onClick={toggleSearch} className="text-gray-200 hover:text-white transition duration-300">
+                                <FontAwesomeIcon icon={searchOpen ? faTimes : faSearch} size="lg" />
+                            </button>
+                            <button onClick={toggleMenu} className="text-gray-200 hover:text-white transition duration-300">
+                                <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} size="lg" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Mobile Search Bar (White) with Icon on Right */}
+                    {searchOpen && (
+                        <div className="md:hidden mt-4">
+                            <form onSubmit={handleSearch} className="relative">
+                                <input
+                                    className="w-full h-10 bg-white text-gray-900 rounded-full pl-4 pr-12 shadow-inner focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-300 placeholder-gray-500 text-sm tracking-wide"
+                                    placeholder="Search products..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                                <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
+                                    <FontAwesomeIcon icon={faSearch} size="sm" />
+                                </button>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Mobile Menu Dropdown */}
+                    {menuOpen && (
+                        <div className="md:hidden mt-4 space-y-3">
+                            <Link href="/cart" className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2">
+                                <FontAwesomeIcon icon={faShoppingCart} /> Cart
+                                <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            </Link>
+                            <Link href="/wishlist" className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2">
+                                <FontAwesomeIcon icon={faHeart} /> Wishlist
+                            </Link>
+                            {auth.user ? (
+                                <>
+                                    <Link href="/profile" className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faUserPlus} /> Profile
+                                    </Link>
+                                    <Link href="/logout" method="post" className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faSignOutAlt} /> Logout
+                                    </Link>
+                                </>
+                            ) : (
+                                <>
+                                    <button onClick={toggleLoginModal} className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faSignInAlt} /> Login
+                                    </button>
+                                    <button onClick={toggleRegistrationModal} className={authButtonStyles}>
+                                        <FontAwesomeIcon icon={faUserPlus} /> Register
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
                 </div>
             </nav>
 
