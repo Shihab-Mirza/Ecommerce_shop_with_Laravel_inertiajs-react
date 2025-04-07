@@ -1,6 +1,8 @@
 <?php
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SubcategoryController;
+use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\AdminController;
 
@@ -23,6 +25,25 @@ Route::get('/add_category', [CategoryController::class, 'create'])->middleware('
 Route::post('/categories', [CategoryController::class, 'store'])->middleware('auth');
 Route::put('/categories/{category}', [CategoryController::class, 'update']);
 Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/add_subcategory', [SubcategoryController::class, 'index'])->name('subcategories.index');
+    Route::post('/subcategories', [SubcategoryController::class, 'store'])->name('subcategories.store');
+    Route::put('/subcategories/{subcategory}', [SubcategoryController::class, 'update'])->name('subcategories.update');
+    Route::delete('/subcategories/{subcategory}', [SubcategoryController::class, 'destroy'])->name('subcategories.destroy');
+});
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/add_brand', [BrandController::class, 'index'])->name('brands.index');
+    Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+    Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+});
+
+
 
 Route::get('/add_product', [ProductController::class, 'create'])->middleware('auth');
 Route::post('/add_new_product', [ProductController::class, 'store'])->name('products.store');

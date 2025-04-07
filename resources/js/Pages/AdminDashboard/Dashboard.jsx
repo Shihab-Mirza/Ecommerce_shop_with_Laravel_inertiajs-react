@@ -115,6 +115,7 @@ const Dashboard = ({ auth }) => {
                 </main>
             </div>
         </div>
+
     );
 };
 

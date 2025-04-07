@@ -2,7 +2,9 @@
 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use App\Models\Category;
+use App\Models\Subcategory;
+use App\Models\Brand;
 use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
@@ -14,12 +16,13 @@ class Product extends Model
         'product_code',
         'name',
         'category_id',
+        'brand_id',
+        'subcategory_id',
         'price',
         'quantity',
         'description',
         'is_featured',
         'image',
-
         'spec_name_1',
         'spec_detail_1',
         'spec_name_2',
@@ -56,5 +59,16 @@ class Product extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function subcategory()
+    {
+        return $this->belongsTo(SubCategory::class);
+    }
+
+
+    public function brands()
+    {
+        return $this->belongsTo(Brand::class);
     }
 }

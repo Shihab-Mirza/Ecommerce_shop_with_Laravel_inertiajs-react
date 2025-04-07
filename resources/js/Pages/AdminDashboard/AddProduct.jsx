@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
 
-const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
+const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(true);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -14,12 +14,14 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
     const [productPrice, setProductPrice] = useState("");
     const [productDescription, setProductDescription] = useState("");
     const [categoryId, setCategoryId] = useState("");
+    const [brandId, setBrandId] = useState("");
     const [quantity, setQuantity] = useState("");
     const [isFeatured, setIsFeatured] = useState("no");
     const [productImage, setProductImage] = useState(null);
     const [validationErrors, setValidationErrors] = useState(initialErrors || {});
     const [successMessage, setSuccessMessage] = useState(flash || null);
     const [activeLink, setActiveLink] = useState('add_product');
+    const [filteredBrands, setFilteredBrands] = useState([]);
     const [specName1, setSpecName1] = useState('');
     const [specDetail1, setSpecDetail1] = useState('');
     const [specName2, setSpecName2] = useState('');
@@ -55,6 +57,17 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+    useEffect(() => {
+        if (categoryId) {
+            const filtered = brands.filter(brand => brand.category_id === parseInt(categoryId));
+            setFilteredBrands(filtered);
+            setBrandId("");
+        } else {
+            setFilteredBrands([]);
+            setBrandId("");
+        }
+    }, [categoryId, brands]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const formData = new FormData();
@@ -62,11 +75,11 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
         formData.append('price', productPrice);
         formData.append('description', productDescription);
         formData.append('category_id', categoryId);
+        formData.append('brand_id', brandId);
         formData.append('quantity', quantity);
         formData.append('is_featured', isFeatured);
         if (productImage) formData.append('image', productImage);
 
-        // Add specifications
         formData.append('spec_name_1', specName1);
         formData.append('spec_detail_1', specDetail1);
         formData.append('spec_name_2', specName2);
@@ -106,10 +119,10 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
                 setProductPrice('');
                 setProductDescription('');
                 setCategoryId('');
+                setBrandId('');
                 setQuantity('');
                 setIsFeatured("no");
                 setProductImage(null);
-                // Reset specifications
                 setSpecName1(''); setSpecDetail1('');
                 setSpecName2(''); setSpecDetail2('');
                 setSpecName3(''); setSpecDetail3('');
@@ -219,23 +232,44 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories }) => {
                                 </div>
                             </div>
 
-                            <div>
-                                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                                    Category
-                                </label>
-                                <select
-                                    value={categoryId}
-                                    onChange={(e) => setCategoryId(e.target.value)}
-                                    className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
-                                    required
-                                >
-                                    <option value="">Select a category</option>
-                                    {categories.map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <div>
+                                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                                        Category
+                                    </label>
+                                    <select
+                                        value={categoryId}
+                                        onChange={(e) => setCategoryId(e.target.value)}
+                                        className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                                        required
+                                    >
+                                        <option value="">Select a category</option>
+                                        {categories.map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                                        Brand Name
+                                    </label>
+                                    <select
+                                        value={brandId}
+                                        onChange={(e) => setBrandId(e.target.value)}
+                                        className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                                        required
+                                        disabled={!categoryId}
+                                    >
+                                        <option value="">Select a brand</option>
+                                        {filteredBrands.map((brand) => (
+                                            <option key={brand.id} value={brand.id}>
+                                                {brand.brand_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">

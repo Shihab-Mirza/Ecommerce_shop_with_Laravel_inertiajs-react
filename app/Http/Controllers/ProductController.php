@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Brand; // Add this
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
     public function create()
     {
-        return inertia('AdminDashboard/AddProduct', [
+        return Inertia::render('AdminDashboard/AddProduct', [
             'products' => Product::all(),
             'categories' => Category::all(['id', 'name']),
+            'brands' => Brand::all(['id', 'brand_name', 'category_id']), // Pass all brands initially
             'flash' => session('success'),
         ]);
     }
@@ -26,6 +29,7 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
+            'brand_id' => 'required|exists:brands,id', // Add brand validation
             'quantity' => 'required|integer|min:0',
             'is_featured' => 'required|in:yes,no',
             'image' => 'nullable|image|max:2048',
@@ -48,7 +52,7 @@ class ProductController extends Controller
             'spec_detail_8' => 'nullable|string|max:255',
             'spec_name_9' => 'nullable|string|max:255',
             'spec_detail_9' => 'nullable|string|max:255',
-            'spec_name_10' => 'nullable|string|max:255',
+            'spec_name_10' => 'nullable|string|max:255 bottled',
             'spec_detail_10' => 'nullable|string|max:255',
             'spec_name_11' => 'nullable|string|max:255',
             'spec_detail_11' => 'nullable|string|max:255',
@@ -87,6 +91,7 @@ class ProductController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'category_id' => $request->category_id,
+            'brand_id' => $request->brand_id, // Add brand_id
             'quantity' => $request->quantity,
             'product_code' => $productCode,
             'is_featured' => $request->is_featured,
@@ -111,15 +116,15 @@ class ProductController extends Controller
             'spec_detail_9' => $request->input('spec_detail_9'),
             'spec_name_10' => $request->input('spec_name_10'),
             'spec_detail_10' => $request->input('spec_detail_10'),
-            'spec_name_11' => $request->input('spec_name_1'),
+            'spec_name_11' => $request->input('spec_name_11'),
             'spec_detail_11' => $request->input('spec_detail_11'),
-            'spec_name_12' => $request->input('spec_name_2'),
+            'spec_name_12' => $request->input('spec_name_12'),
             'spec_detail_12' => $request->input('spec_detail_12'),
-            'spec_name_13' => $request->input('spec_name_3'),
+            'spec_name_13' => $request->input('spec_name_13'),
             'spec_detail_13' => $request->input('spec_detail_13'),
-            'spec_name_14' => $request->input('spec_name_4'),
+            'spec_name_14' => $request->input('spec_name_14'),
             'spec_detail_14' => $request->input('spec_detail_14'),
-            'spec_name_15' => $request->input('spec_name_5'),
+            'spec_name_15' => $request->input('spec_name_15'),
             'spec_detail_15' => $request->input('spec_detail_15'),
         ];
 

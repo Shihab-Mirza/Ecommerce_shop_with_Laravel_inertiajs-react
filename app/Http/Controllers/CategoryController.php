@@ -10,7 +10,7 @@ class CategoryController extends Controller
 {
     public function create()
     {
-        return inertia('AdminDashboard/AddCategory', [
+        return Inertia::render('AdminDashboard/AddCategory', [
             'categories' => Category::all(),
             'flash' => session('success'), // Send flash message as prop
         ]);

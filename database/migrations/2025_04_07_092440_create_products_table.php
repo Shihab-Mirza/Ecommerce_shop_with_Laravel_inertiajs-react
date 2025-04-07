@@ -15,6 +15,8 @@ return new class extends Migration
             $table->bigInteger('product_code')->unique();
             $table->string('name');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subcategory_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignId('brand_id')->constrained()->onDelete('cascade');
             $table->decimal('price', 8, 2);
             $table->integer('quantity')->default(0);
             $table->string('description')->nullable();

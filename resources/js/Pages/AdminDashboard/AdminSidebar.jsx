@@ -116,11 +116,37 @@ const AdminSidebar = ({
                                     </li>
                                     <li>
                                         <InertiaLink
+                                            href="/add_subcategory"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_subcategory' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add sub category
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_brand"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_brand' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add new brand
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
                                             href="/add_product"
                                             className={`block px-3 py-2 ${
                                                 isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'products/create' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'add_product' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
