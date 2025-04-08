@@ -7,7 +7,10 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
     const [isProductsOpen, setIsProductsOpen] = useState(true); // Products menu starts open
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedMode = localStorage.getItem('darkMode');
+        return savedMode ? JSON.parse(savedMode) : false;
+    });
     const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [categoryName, setCategoryName] = useState("");
@@ -18,7 +21,25 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
     const [successMessage, setSuccessMessage] = useState(flash || null);
     const [activeLink, setActiveLink] = useState('add_category'); // Track active link
 
-    const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+
+    useEffect(() => {
+        localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+        document.documentElement.classList.toggle('dark', isDarkMode);
+
+        // Listen for dark mode changes from other components
+        const handleDarkModeChange = (event) => {
+            setIsDarkMode(event.detail);
+        };
+        window.addEventListener('darkModeChange', handleDarkModeChange);
+
+        // Cleanup listener on unmount
+        return () => {
+            window.removeEventListener('darkModeChange', handleDarkModeChange);
+        };
+    }, [isDarkMode]);
+
+    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 

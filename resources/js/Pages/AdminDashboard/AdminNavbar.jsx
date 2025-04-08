@@ -1,19 +1,30 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSearch, faBell, faUser, faMoon, faSun, faBars } from '@fortawesome/free-solid-svg-icons';
 
 const AdminNavbar = ({
-    isDarkMode,
-    toggleDarkMode,
-    toggleMobileSidebar,
     searchQuery,
     setSearchQuery,
     isProfileOpen,
     setIsProfileOpen,
-    auth
+    auth,
+    toggleMobileSidebar
 }) => {
-    // Sync dark mode with localStorage on mount
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedMode = localStorage.getItem('darkMode');
+        return savedMode ? JSON.parse(savedMode) : false;
+    });
+
+    const toggleDarkMode = () => {
+        setIsDarkMode(prevMode => {
+            const newMode = !prevMode;
+            localStorage.setItem('darkMode', JSON.stringify(newMode));
+            window.dispatchEvent(new CustomEvent('darkModeChange', { detail: newMode }));
+            return newMode;
+        });
+    };
+
     useEffect(() => {
         document.documentElement.classList.toggle('dark', isDarkMode);
     }, [isDarkMode]);
@@ -23,11 +34,14 @@ const AdminNavbar = ({
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between h-16 items-center">
                     <div className="flex items-center space-x-4">
-                        <button onClick={toggleMobileSidebar} className="md:hidden p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white">
+                        <button
+                            onClick={toggleMobileSidebar}
+                            className="md:hidden p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white"
+                        >
                             <FontAwesomeIcon icon={faBars} className="text-xl" />
                         </button>
                         <h1 className={`text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent ${isDarkMode ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500' : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'} animate-pulse tracking-wider`}>
-                            Computer store
+                            Computer Store
                         </h1>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
@@ -47,7 +61,10 @@ const AdminNavbar = ({
                             <FontAwesomeIcon icon={faBell} className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} group-hover:text-white`} />
                             <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs flex items-center justify-center text-white opacity-75">3</span>
                         </button>
-                        <button onClick={toggleDarkMode} className={`p-2 sm:p-3 rounded-full ${isDarkMode ? 'bg-gray-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600' : 'bg-gray-100 hover:bg-gradient-to-br hover:from-blue-400 hover:to-indigo-500'} transform hover:scale-110 transition-all duration-300 group`}>
+                        <button
+                            onClick={toggleDarkMode}
+                            className={`p-2 sm:p-3 rounded-full ${isDarkMode ? 'bg-gray-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600' : 'bg-gray-100 hover:bg-gradient-to-br hover:from-blue-400 hover:to-indigo-500'} transform hover:scale-110 transition-all duration-300 group`}
+                        >
                             <FontAwesomeIcon icon={isDarkMode ? faSun : faMoon} className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} group-hover:text-white`} />
                         </button>
                         <div className="relative">

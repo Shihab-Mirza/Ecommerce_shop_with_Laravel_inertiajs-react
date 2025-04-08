@@ -3,17 +3,21 @@ import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
 
-const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) => {
+const AddProduct = ({ auth, errors: initialErrors, flash, categories, subcategories, brands }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(true);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [isDarkMode, setIsDarkMode] = useState(false);
+     const [isDarkMode, setIsDarkMode] = useState(() => {
+         const savedMode = localStorage.getItem('darkMode');
+         return savedMode ? JSON.parse(savedMode) : false;
+     });
     const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [productName, setProductName] = useState("");
     const [productPrice, setProductPrice] = useState("");
     const [productDescription, setProductDescription] = useState("");
     const [categoryId, setCategoryId] = useState("");
+    const [subcategoryId, setSubcategoryId] = useState("");
     const [brandId, setBrandId] = useState("");
     const [quantity, setQuantity] = useState("");
     const [isFeatured, setIsFeatured] = useState("no");
@@ -21,6 +25,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
     const [validationErrors, setValidationErrors] = useState(initialErrors || {});
     const [successMessage, setSuccessMessage] = useState(flash || null);
     const [activeLink, setActiveLink] = useState('add_product');
+    const [filteredSubcategories, setFilteredSubcategories] = useState([]);
     const [filteredBrands, setFilteredBrands] = useState([]);
     const [specName1, setSpecName1] = useState('');
     const [specDetail1, setSpecDetail1] = useState('');
@@ -53,20 +58,54 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
     const [specName15, setSpecName15] = useState('');
     const [specDetail15, setSpecDetail15] = useState('');
 
-    const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+   useEffect(() => {
+          localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+          document.documentElement.classList.toggle('dark', isDarkMode);
+
+          // Listen for dark mode changes from other components
+          const handleDarkModeChange = (event) => {
+              setIsDarkMode(event.detail);
+          };
+          window.addEventListener('darkModeChange', handleDarkModeChange);
+
+          // Cleanup listener on unmount
+          return () => {
+              window.removeEventListener('darkModeChange', handleDarkModeChange);
+          };
+      }, [isDarkMode]);
+
+      const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+      
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
+    // Filter subcategories based on selected category
     useEffect(() => {
         if (categoryId) {
-            const filtered = brands.filter(brand => brand.category_id === parseInt(categoryId));
-            setFilteredBrands(filtered);
+            const filtered = subcategories.filter(subcategory => subcategory.category_id === parseInt(categoryId));
+            setFilteredSubcategories(filtered);
+            setSubcategoryId(""); // Reset subcategory when category changes
+            setFilteredBrands([]); // Reset brands when category changes
+            setBrandId(""); // Reset brand when category changes
+        } else {
+            setFilteredSubcategories([]);
+            setSubcategoryId("");
+            setFilteredBrands([]);
             setBrandId("");
+        }
+    }, [categoryId, subcategories]);
+
+    // Filter brands based on selected subcategory
+    useEffect(() => {
+        if (subcategoryId) {
+            const filtered = brands.filter(brand => brand.subcategory_id === parseInt(subcategoryId));
+            setFilteredBrands(filtered);
+            setBrandId(""); // Reset brand when subcategory changes
         } else {
             setFilteredBrands([]);
             setBrandId("");
         }
-    }, [categoryId, brands]);
+    }, [subcategoryId, brands]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -75,6 +114,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
         formData.append('price', productPrice);
         formData.append('description', productDescription);
         formData.append('category_id', categoryId);
+        formData.append('subcategory_id', subcategoryId);
         formData.append('brand_id', brandId);
         formData.append('quantity', quantity);
         formData.append('is_featured', isFeatured);
@@ -119,6 +159,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                 setProductPrice('');
                 setProductDescription('');
                 setCategoryId('');
+                setSubcategoryId('');
                 setBrandId('');
                 setQuantity('');
                 setIsFeatured("no");
@@ -253,6 +294,28 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                                 </div>
                                 <div>
                                     <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                                        Subcategory
+                                    </label>
+                                    <select
+                                        value={subcategoryId}
+                                        onChange={(e) => setSubcategoryId(e.target.value)}
+                                        className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                                        required
+                                        disabled={!categoryId}
+                                    >
+                                        <option value="">Select a subcategory</option>
+                                        {filteredSubcategories.map((subcategory) => (
+                                            <option key={subcategory.id} value={subcategory.id}>
+                                                {subcategory.sub_category_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <div>
+                                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                                         Brand Name
                                     </label>
                                     <select
@@ -260,7 +323,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                                         onChange={(e) => setBrandId(e.target.value)}
                                         className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
                                         required
-                                        disabled={!categoryId}
+                                        disabled={!subcategoryId}
                                     >
                                         <option value="">Select a brand</option>
                                         {filteredBrands.map((brand) => (
@@ -270,9 +333,6 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                                         ))}
                                     </select>
                                 </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                                         Quantity
@@ -288,6 +348,9 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                                         step="1"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
                                         Featured Product
@@ -301,18 +364,17 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, brands }) 
                                         <option value="yes">Yes</option>
                                     </select>
                                 </div>
-                            </div>
-
-                            <div>
-                                <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
-                                    Product Image
-                                </label>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={(e) => setProductImage(e.target.files[0])}
-                                    className={`w-full py-2 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 file:bg-gray-600 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1.5' : 'bg-gray-100 text-gray-800 border-gray-300 file:bg-gray-200 file:text-gray-800 file:border-0 file:rounded-md file:px-3 file:py-1.5'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
-                                />
+                                <div>
+                                    <label className={`block text-sm font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'} mb-1`}>
+                                        Product Image
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setProductImage(e.target.files[0])}
+                                        className={`w-full py-2 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600 file:bg-gray-600 file:text-white file:border-0 file:rounded-md file:px-3 file:py-1.5' : 'bg-gray-100 text-gray-800 border-gray-300 file:bg-gray-200 file:text-gray-800 file:border-0 file:rounded-md file:px-3 file:py-1.5'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                                    />
+                                </div>
                             </div>
 
                             <div>

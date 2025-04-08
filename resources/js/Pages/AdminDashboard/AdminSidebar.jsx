@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBell, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faBox, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
 
 const AdminSidebar = ({
-    isDarkMode,
     isSidebarMinimized,
     toggleSidebar,
     isSidebarOpen,
     toggleMobileSidebar,
     isProductsOpen,
     setIsProductsOpen,
-    activeLink
+    activeLink,
+    setIsSidebarOpen
 }) => {
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedMode = localStorage.getItem('darkMode');
+        return savedMode ? JSON.parse(savedMode) : false;
+    });
+
+    useEffect(() => {
+        localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
+        document.documentElement.classList.toggle('dark', isDarkMode);
+
+        const handleDarkModeChange = (event) => {
+            setIsDarkMode(event.detail);
+        };
+        window.addEventListener('darkModeChange', handleDarkModeChange);
+
+        return () => {
+            window.removeEventListener('darkModeChange', handleDarkModeChange);
+        };
+    }, [isDarkMode]);
+
     return (
         <>
             <aside
@@ -77,7 +96,7 @@ const AdminSidebar = ({
                                 } rounded-xl transition-all duration-300 transform hover:scale-105`}
                             >
                                 <div className="flex items-center">
-                                    <FontAwesomeIcon icon={faBell} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    <FontAwesomeIcon icon={faBox} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
                                     {!isSidebarMinimized && <span className="text-sm sm:text-base">Products</span>}
                                 </div>
                                 {!isSidebarMinimized && (
@@ -90,11 +109,17 @@ const AdminSidebar = ({
                                 <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
                                     <li>
                                         <InertiaLink
-                                            href="/products"
+                                            href="/view_all_products"
                                             className={`block px-3 py-2 ${
-                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'products' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'view_all_products'
+                                                    ? (isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                    : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
@@ -105,9 +130,15 @@ const AdminSidebar = ({
                                         <InertiaLink
                                             href="/add_category"
                                             className={`block px-3 py-2 ${
-                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'add_category' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'add_category'
+                                                    ? (isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                    : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
@@ -118,9 +149,15 @@ const AdminSidebar = ({
                                         <InertiaLink
                                             href="/add_subcategory"
                                             className={`block px-3 py-2 ${
-                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'add_subcategory' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'add_subcategory'
+                                                    ? (isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                    : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
@@ -131,9 +168,15 @@ const AdminSidebar = ({
                                         <InertiaLink
                                             href="/add_brand"
                                             className={`block px-3 py-2 ${
-                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'add_brand' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'add_brand'
+                                                    ? (isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                    : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
@@ -144,9 +187,15 @@ const AdminSidebar = ({
                                         <InertiaLink
                                             href="/add_product"
                                             className={`block px-3 py-2 ${
-                                                isDarkMode ? 'text-gray-300 hover:bg-gray-700/70 hover:text-white' : 'text-gray-600 hover:bg-gray-200 hover:text-gray-800'
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
-                                                activeLink === 'add_product' ? (isDarkMode ? 'bg-gray-700/70 text-white' : 'bg-gray-200 text-gray-800') : ''
+                                                activeLink === 'add_product'
+                                                    ? (isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                    : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >

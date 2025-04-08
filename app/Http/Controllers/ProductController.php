@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\Brand; // Add this
+use App\Models\Subcategory;
+use App\Models\Brand;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
@@ -16,7 +17,8 @@ class ProductController extends Controller
         return Inertia::render('AdminDashboard/AddProduct', [
             'products' => Product::all(),
             'categories' => Category::all(['id', 'name']),
-            'brands' => Brand::all(['id', 'brand_name', 'category_id']), // Pass all brands initially
+            'subcategories' => Subcategory::all(['id', 'sub_category_name', 'category_id']),
+            'brands' => Brand::all(['id', 'brand_name', 'subcategory_id', 'category_id']),
             'flash' => session('success'),
         ]);
     }
@@ -29,7 +31,8 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
-            'brand_id' => 'required|exists:brands,id', // Add brand validation
+            'subcategory_id' => 'required|exists:subcategories,id',
+            'brand_id' => 'required|exists:brands,id',
             'quantity' => 'required|integer|min:0',
             'is_featured' => 'required|in:yes,no',
             'image' => 'nullable|image|max:2048',
@@ -52,7 +55,7 @@ class ProductController extends Controller
             'spec_detail_8' => 'nullable|string|max:255',
             'spec_name_9' => 'nullable|string|max:255',
             'spec_detail_9' => 'nullable|string|max:255',
-            'spec_name_10' => 'nullable|string|max:255 bottled',
+            'spec_name_10' => 'nullable|string|max:255',
             'spec_detail_10' => 'nullable|string|max:255',
             'spec_name_11' => 'nullable|string|max:255',
             'spec_detail_11' => 'nullable|string|max:255',
@@ -91,7 +94,8 @@ class ProductController extends Controller
             'price' => $request->price,
             'description' => $request->description,
             'category_id' => $request->category_id,
-            'brand_id' => $request->brand_id, // Add brand_id
+            'subcategory_id' => $request->subcategory_id,
+            'brand_id' => $request->brand_id,
             'quantity' => $request->quantity,
             'product_code' => $productCode,
             'is_featured' => $request->is_featured,
@@ -134,5 +138,40 @@ class ProductController extends Controller
         // Return a response with a flash message
         return redirect()->back()
             ->with('success', 'Product added successfully!');
+    }
+
+    public function index(Request $request)
+    {
+        $perPage = 20;
+        $search = $request->input('search', '');
+
+        $productsQuery = Product::with(['category', 'subcategory', 'brand'])
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('product_code', 'like', "%{$search}%")
+                    ->orWhereHas('category', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('subcategory', function ($q) use ($search) {
+                        $q->where('sub_category_name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('brand', function ($q) use ($search) {
+                        $q->where('brand_name', 'like', "%{$search}%");
+                    });
+            });
+
+        // Paginate and append search query manually
+        $products = $productsQuery->paginate($perPage);
+        if ($search) {
+            $products->appends(['search' => $search]);
+        }
+
+        return Inertia::render('AdminDashboard/ViewProduct', [
+            'products' => $products,
+            'categories' => Category::all(['id', 'name']),
+            'subcategories' => Subcategory::all(['id', 'sub_category_name', 'category_id']),
+            'brands' => Brand::all(['id', 'brand_name', 'subcategory_id', 'category_id']),
+            'search' => $search,
+        ]);
     }
 }
