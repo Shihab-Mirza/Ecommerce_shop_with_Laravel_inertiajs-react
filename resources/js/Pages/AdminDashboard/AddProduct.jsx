@@ -75,7 +75,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, subcategor
       }, [isDarkMode]);
 
       const toggleDarkMode = () => setIsDarkMode(prev => !prev);
-      
+
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 

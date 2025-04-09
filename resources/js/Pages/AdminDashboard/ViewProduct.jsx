@@ -3,7 +3,7 @@ import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
 
-const ViewProduct = ({ auth, products, categories, subcategories, brands, search: initialSearch }) => {
+const ViewProduct = ({ auth, products, categories, subcategories, brands, search: initialSearch, flash }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(true);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState(initialSearch || '');
@@ -14,6 +14,7 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
     const [isSidebarMinimized, setIsSidebarMinimized] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeLink, setActiveLink] = useState('view_product');
+    const [successMessage, setSuccessMessage] = useState(flash?.success || null);
 
     useEffect(() => {
         localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -28,6 +29,14 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
             window.removeEventListener('darkModeChange', handleDarkModeChange);
         };
     }, [isDarkMode]);
+
+    useEffect(() => {
+        if (flash?.success) {
+            setSuccessMessage(flash.success);
+            const timer = setTimeout(() => setSuccessMessage(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [flash]);
 
     const toggleDarkMode = () => setIsDarkMode(prev => !prev);
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
@@ -58,8 +67,26 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
     };
 
     const handleViewUpdate = (productId) => {
-        Inertia.get(`/products/${productId}`);
+        Inertia.get(`/products/${productId}/edit`);
     };
+
+    const handleDelete = (productId) => {
+        if (confirm('Are you sure you want to delete this product?')) {
+            Inertia.delete(`/products/${productId}`, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log('Product deleted successfully');
+                    setSuccessMessage('Product deleted successfully!');
+                },
+                onError: (errors) => {
+                    console.error('Error deleting product:', errors);
+                },
+            });
+        }
+    };
+
+    const dismissSuccessMessage = () => setSuccessMessage(null);
 
     return (
         <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
@@ -92,7 +119,15 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                             View Products
                         </h2>
 
-                        {/* Search Bar */}
+                        {successMessage && (
+                            <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-300 flex justify-between items-center">
+                                <span>{successMessage}</span>
+                                <button onClick={dismissSuccessMessage} className="text-green-800 hover:text-green-900">
+                                    ✕
+                                </button>
+                            </div>
+                        )}
+
                         <form onSubmit={handleSearch} className="mb-6">
                             <div className="flex items-center">
                                 <input
@@ -111,7 +146,6 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                             </div>
                         </form>
 
-                        {/* Products Table */}
                         <div className="overflow-x-auto rounded-lg shadow-md">
                             <table className={`w-full table-auto text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                                 <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} sticky top-0 z-10`}>
@@ -125,7 +159,7 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                                         <th className="py-3 px-3 text-left font-semibold w-28 text-base">Subcategory</th>
                                         <th className="py-3 px-3 text-left font-semibold w-24 text-base">Brand</th>
                                         <th className="py-3 px-3 text-left font-semibold w-20 text-base">Quantity</th>
-                                        <th className="py-3 px-3 text-left font-semibold w-24 text-base">Actions</th>
+                                        <th className="py-3 px-3 text-left font-semibold w-32 text-base">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -153,13 +187,21 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                                             <td className="py-3 px-3 w-28 whitespace-normal">{product.subcategory?.sub_category_name || 'N/A'}</td>
                                             <td className="py-3 px-3 w-24 whitespace-normal">{product.brand?.brand_name || 'N/A'}</td>
                                             <td className="py-3 px-3 w-20">{product.quantity}</td>
-                                            <td className="py-3 px-3 w-24">
-                                                <button
-                                                    onClick={() => handleViewUpdate(product.id)}
-                                                    className={`py-1 px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'} transition-all duration-200`}
-                                                >
-                                                    View/Update
-                                                </button>
+                                            <td className="py-3 px-3 w-32">
+                                                <div className="flex flex-col space-y-2">
+                                                    <button
+                                                        onClick={() => handleViewUpdate(product.id)}
+                                                        className={`py-1 px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} transition-all duration-200`}
+                                                    >
+                                                        View/Update
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(product.id)}
+                                                        className={`py-1 px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} transition-all duration-200`}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -174,7 +216,6 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                             </table>
                         </div>
 
-                        {/* Pagination */}
                         <div className="mt-6 flex justify-between items-center">
                             <div className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
                                 Showing {products.from || 0} to {products.to || 0} of {products.total} products

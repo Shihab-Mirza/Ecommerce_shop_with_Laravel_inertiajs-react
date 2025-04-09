@@ -26,6 +26,8 @@ Route::post('/categories', [CategoryController::class, 'store']);
 Route::put('/categories/{category}', [CategoryController::class, 'update']);
 Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
+
+
 Route::get('/add_subcategory', [SubcategoryController::class, 'index'])->name('subcategories.index');
 Route::post('/subcategories', [SubcategoryController::class, 'store'])->name('subcategories.store');
 Route::put('/subcategories/{subcategory}', [SubcategoryController::class, 'update'])->name('subcategories.update');
@@ -38,9 +40,16 @@ Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.
 Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
 
 
+
+
+
 Route::get('/add_product', [ProductController::class, 'create']);
 Route::post('/add_new_product', [ProductController::class, 'store'])->name('products.store');
 Route::get('/view_all_products', [ProductController::class, 'index'])->name('products.index');
+
+Route::get('/products/{id}/edit', [ProductController::class, 'edit'])->name('products.edit');
+Route::put('/products/{id}', [ProductController::class, 'update'])->name('products.update');
+Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
 
 
 });
