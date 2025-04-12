@@ -15,4 +15,11 @@ export default defineConfig({
         }),
         react(),
     ],
+
+    server: {
+        hmr: true,
+        watch: {
+          usePolling: true, // Helps in some environments (e.g., Docker, WSL)
+        },
+      },
 });

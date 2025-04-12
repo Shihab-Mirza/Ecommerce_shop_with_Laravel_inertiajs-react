@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faBox, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons';
+import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser } from '@fortawesome/free-solid-svg-icons';
 
 const AdminSidebar = ({
     isSidebarMinimized,
@@ -11,11 +11,21 @@ const AdminSidebar = ({
     isProductsOpen,
     setIsProductsOpen,
     activeLink,
-    setIsSidebarOpen
+    setIsSidebarOpen,
 }) => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const savedMode = localStorage.getItem('darkMode');
         return savedMode ? JSON.parse(savedMode) : false;
+    });
+    const [isHomepageOpen, setIsHomepageOpen] = useState(() => {
+        const savedState = localStorage.getItem('isHomepageOpen');
+        const isHomepageActive = ['add_image_slideshow', 'add_featured_product', 'view_featured_products'].includes(activeLink);
+        return savedState ? JSON.parse(savedState) : isHomepageActive;
+    });
+    const [isUserRolesOpen, setIsUserRolesOpen] = useState(() => {
+        const savedState = localStorage.getItem('isUserRolesOpen');
+        const isUserRolesActive = [ 'assign_role'].includes(activeLink);
+        return savedState ? JSON.parse(savedState) : isUserRolesActive;
     });
 
     useEffect(() => {
@@ -32,6 +42,22 @@ const AdminSidebar = ({
         };
     }, [isDarkMode]);
 
+    useEffect(() => {
+        localStorage.setItem('isHomepageOpen', JSON.stringify(isHomepageOpen));
+    }, [isHomepageOpen]);
+
+    useEffect(() => {
+        localStorage.setItem('isUserRolesOpen', JSON.stringify(isUserRolesOpen));
+    }, [isUserRolesOpen]);
+
+    useEffect(() => {
+        const isHomepageActive = ['add_image_slideshow', 'add_featured_product', 'view_featured_products'].includes(activeLink);
+        setIsHomepageOpen((prev) => isHomepageActive || prev);
+
+        const isUserRolesActive = ['view_all_roles', 'add_role', 'assign_role'].includes(activeLink);
+        setIsUserRolesOpen((prev) => isUserRolesActive || prev);
+    }, [activeLink]);
+
     return (
         <>
             <aside
@@ -43,13 +69,15 @@ const AdminSidebar = ({
                         : 'bg-gradient-to-b from-white via-gray-50 to-white text-gray-800'
                 } shadow-xl p-4 space-y-6 transform transition-all duration-300 ${
                     isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-                }`}
+                } overflow-y-auto`}
             >
                 <div className="flex items-center justify-between">
                     {!isSidebarMinimized && (
                         <h2
                             className={`text-xl sm:text-2xl font-bold bg-clip-text text-transparent ${
-                                isDarkMode ? 'bg-gradient-to-r from-blue-400 to-purple-500' : 'bg-gradient-to-r from-blue-500 to-indigo-500'
+                                isDarkMode
+                                    ? 'bg-gradient-to-r from-blue-400 to-purple-500'
+                                    : 'bg-gradient-to-r from-blue-500 to-indigo-500'
                             }`}
                         >
                             Dashboard
@@ -78,11 +106,15 @@ const AdminSidebar = ({
                                         ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
                                         : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                 } rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                                    activeLink === 'dashboard' ? (isDarkMode ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white') : ''
+                                    activeLink === 'dashboard'
+                                        ? isDarkMode
+                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600'
+                                            : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                        : ''
                                 }`}
                                 onClick={() => setIsSidebarOpen(false)}
                             >
-                                <FontAwesomeIcon icon={faUser} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                <FontAwesomeIcon icon={faTable} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
                                 {!isSidebarMinimized && <span className="text-sm sm:text-base">Overview</span>}
                             </InertiaLink>
                         </li>
@@ -116,9 +148,9 @@ const AdminSidebar = ({
                                                     : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
                                                 activeLink === 'view_all_products'
-                                                    ? (isDarkMode
+                                                    ? isDarkMode
                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
                                                     : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
@@ -135,9 +167,9 @@ const AdminSidebar = ({
                                                     : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
                                                 activeLink === 'add_category'
-                                                    ? (isDarkMode
+                                                    ? isDarkMode
                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
                                                     : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
@@ -154,9 +186,9 @@ const AdminSidebar = ({
                                                     : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
                                                 activeLink === 'add_subcategory'
-                                                    ? (isDarkMode
+                                                    ? isDarkMode
                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
                                                     : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
@@ -173,9 +205,9 @@ const AdminSidebar = ({
                                                     : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
                                                 activeLink === 'add_brand'
-                                                    ? (isDarkMode
+                                                    ? isDarkMode
                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
                                                     : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
@@ -192,14 +224,139 @@ const AdminSidebar = ({
                                                     : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
                                             } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
                                                 activeLink === 'add_product'
-                                                    ? (isDarkMode
+                                                    ? isDarkMode
                                                         ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
-                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white')
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
                                                     : ''
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
                                             Add Product
+                                        </InertiaLink>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+                        <li>
+                            <button
+                                onClick={() => setIsHomepageOpen(!isHomepageOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105`}
+                            >
+                                <div className="flex items-center">
+                                    <FontAwesomeIcon icon={faHome} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">Manage Homepage</span>}
+                                </div>
+                                {!isSidebarMinimized && (
+                                    <span className="transition-transform duration-300 text-xs sm:text-sm">
+                                        {isHomepageOpen ? '▼' : '▶'}
+                                    </span>
+                                )}
+                            </button>
+                            {isHomepageOpen && !isSidebarMinimized && (
+                                <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_image_slideshow"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_image_slideshow'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Image Slideshow
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_featured_product"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_featured_product'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Featured Product
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/view_featured_products"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'view_featured_products'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            View Featured Products
+                                        </InertiaLink>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+                        <li>
+                            <button
+                                onClick={() => setIsUserRolesOpen(!isUserRolesOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105`}
+                            >
+                                <div className="flex items-center">
+                                    <FontAwesomeIcon icon={faUser} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">User Role Management</span>}
+                                </div>
+                                {!isSidebarMinimized && (
+                                    <span className="transition-transform duration-300 text-xs sm:text-sm">
+                                        {isUserRolesOpen ? '▼' : '▶'}
+                                    </span>
+                                )}
+                            </button>
+                            {isUserRolesOpen && !isSidebarMinimized && (
+                                <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
+
+                                    <li>
+                                        <InertiaLink
+                                            href="/assign_role"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'assign_role'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Assign Role
                                         </InertiaLink>
                                     </li>
                                 </ul>

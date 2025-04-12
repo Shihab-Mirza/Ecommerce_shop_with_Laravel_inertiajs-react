@@ -1,14 +1,24 @@
 <?php
 
 namespace App\Http\Controllers;
-use Inertia\Inertia;
 
-use Illuminate\Http\Request;
+use App\Models\Homepage;
+use Inertia\Inertia;
 
 class HomeController extends Controller
 {
-    public function home()
+    public function index()
     {
-        return Inertia::render('Landing/Home');
+        $images = Homepage::all()->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'url' => asset('storage/' . $image->image_path),
+            ];
+        });
+
+        return Inertia::render('Landing/Home', [
+           
+            'images' => $images,
+        ]);
     }
 }

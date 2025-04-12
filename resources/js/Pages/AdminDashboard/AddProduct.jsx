@@ -361,7 +361,6 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, subcategor
                                         className={`w-full py-2.5 px-4 rounded-lg border ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
                                     >
                                         <option value="no">No</option>
-                                        <option value="yes">Yes</option>
                                     </select>
                                 </div>
                                 <div>
