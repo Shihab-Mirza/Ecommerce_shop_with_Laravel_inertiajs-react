@@ -150,7 +150,7 @@ const ViewProduct = ({ auth, products, categories, subcategories, brands, search
                             <table className={`w-full table-auto text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                                 <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} sticky top-0 z-10`}>
                                     <tr>
-                                        <th className="py-3 px-3 text-left font-semibold w-12 text-base">S.No</th>
+                                        <th className="py-3 px-3 text-left font-semibold w-12 text-base">SI</th>
                                         <th className="py-3 px-3 text-left font-semibold w-16 text-base">Image</th>
                                         <th className="py-3 px-3 text-left font-semibold max-w-xs text-base">Name</th>
                                         <th className="py-3 px-3 text-left font-semibold w-24 text-base">Code</th>

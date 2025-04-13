@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser, faTag } from '@fortawesome/free-solid-svg-icons';
 
 const AdminSidebar = ({
     isSidebarMinimized,
@@ -19,13 +19,25 @@ const AdminSidebar = ({
     });
     const [isHomepageOpen, setIsHomepageOpen] = useState(() => {
         const savedState = localStorage.getItem('isHomepageOpen');
-        const isHomepageActive = ['add_image_slideshow', 'add_featured_product', 'view_featured_products'].includes(activeLink);
+        const isHomepageActive = [
+            'add_image_slideshow',
+            'add_featured_product',
+            'view_featured_products',
+            'add_special_offer_product',
+            'view_special_offer_product',
+            'manage_special_offer'
+        ].includes(activeLink);
         return savedState ? JSON.parse(savedState) : isHomepageActive;
     });
     const [isUserRolesOpen, setIsUserRolesOpen] = useState(() => {
         const savedState = localStorage.getItem('isUserRolesOpen');
-        const isUserRolesActive = [ 'assign_role'].includes(activeLink);
+        const isUserRolesActive = ['assign_role'].includes(activeLink);
         return savedState ? JSON.parse(savedState) : isUserRolesActive;
+    });
+    const [isOffersOpen, setIsOffersOpen] = useState(() => {
+        const savedState = localStorage.getItem('isOffersOpen');
+        const isOffersActive = ['add_offer', 'view_offers'].includes(activeLink);
+        return savedState ? JSON.parse(savedState) : isOffersActive;
     });
 
     useEffect(() => {
@@ -51,11 +63,25 @@ const AdminSidebar = ({
     }, [isUserRolesOpen]);
 
     useEffect(() => {
-        const isHomepageActive = ['add_image_slideshow', 'add_featured_product', 'view_featured_products'].includes(activeLink);
+        localStorage.setItem('isOffersOpen', JSON.stringify(isOffersOpen));
+    }, [isOffersOpen]);
+
+    useEffect(() => {
+        const isHomepageActive = [
+            'add_image_slideshow',
+            'add_featured_product',
+            'view_featured_products',
+            'add_special_offer_product',
+            'view_special_offer_product',
+            'manage_special_offer'
+        ].includes(activeLink);
         setIsHomepageOpen((prev) => isHomepageActive || prev);
 
         const isUserRolesActive = ['view_all_roles', 'add_role', 'assign_role'].includes(activeLink);
         setIsUserRolesOpen((prev) => isUserRolesActive || prev);
+
+        const isOffersActive = ['add_offer', 'view_offers'].includes(activeLink);
+        setIsOffersOpen((prev) => isOffersActive || prev);
     }, [activeLink]);
 
     return (
@@ -239,6 +265,49 @@ const AdminSidebar = ({
                         </li>
                         <li>
                             <button
+                                onClick={() => setIsOffersOpen(!isOffersOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105`}
+                            >
+                                <div className="flex items-center">
+                                    <FontAwesomeIcon icon={faTag} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">Manage Offer</span>}
+                                </div>
+                                {!isSidebarMinimized && (
+                                    <span className="transition-transform duration-300 text-xs sm:text-sm">
+                                        {isOffersOpen ? '▼' : '▶'}
+                                    </span>
+                                )}
+                            </button>
+                            {isOffersOpen && !isSidebarMinimized && (
+                                <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_offer"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_offer'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Offer
+                                        </InertiaLink>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+                        <li>
+                            <button
                                 onClick={() => setIsHomepageOpen(!isHomepageOpen)}
                                 className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
                                     isDarkMode
@@ -315,6 +384,63 @@ const AdminSidebar = ({
                                             View Featured Products
                                         </InertiaLink>
                                     </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_special_offer_product"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_special_offer_product'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Special Offer Product
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/view_special_offer_products"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'view_special_offer_products'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            View Special Offer Product
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/manage_special_offer"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'manage_special_offer'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Manage Special Offer
+                                        </InertiaLink>
+                                    </li>
                                 </ul>
                             )}
                         </li>
@@ -339,7 +465,6 @@ const AdminSidebar = ({
                             </button>
                             {isUserRolesOpen && !isSidebarMinimized && (
                                 <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
-
                                     <li>
                                         <InertiaLink
                                             href="/assign_role"

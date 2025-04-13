@@ -21,6 +21,7 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
     const [brandId, setBrandId] = useState(product.brand_id || '');
     const [quantity, setQuantity] = useState(product.quantity || '');
     const [isFeatured, setIsFeatured] = useState(product.is_featured || 'no');
+    const [isSpecialOffer, setIsSpecialOffer] = useState(product.is_special_offer || 'no');
     const [productImage, setProductImage] = useState(null);
     const [validationErrors, setValidationErrors] = useState(initialErrors || {});
     const [successMessage, setSuccessMessage] = useState(flash || null);
@@ -28,7 +29,6 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
     const [filteredSubcategories, setFilteredSubcategories] = useState([]);
     const [filteredBrands, setFilteredBrands] = useState([]);
 
-    // Initialize specifications array from product data
     const [specifications, setSpecifications] = useState(
         Array.from({ length: 15 }, (_, index) => ({
             name: product[`spec_name_${index + 1}`] || '',
@@ -80,6 +80,15 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
         }
     }, [subcategoryId, brands]);
 
+    // Updated handlers to make dropdowns independent
+    const handleFeaturedChange = (value) => {
+        setIsFeatured(value);
+    };
+
+    const handleSpecialOfferChange = (value) => {
+        setIsSpecialOffer(value);
+    };
+
     const handleSpecChange = (index, field, value) => {
         setSpecifications((prev) =>
             prev.map((spec, i) => (i === index ? { ...spec, [field]: value } : spec))
@@ -97,10 +106,10 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
         formData.append('brand_id', brandId);
         formData.append('quantity', quantity);
         formData.append('is_featured', isFeatured);
+        formData.append('is_special_offer', isSpecialOffer);
         if (productImage) formData.append('image', productImage);
         formData.append('_method', 'PUT');
 
-        // Append specifications
         specifications.forEach((spec, index) => {
             formData.append(`spec_name_${index + 1}`, spec.name);
             formData.append(`spec_detail_${index + 1}`, spec.detail);
@@ -352,7 +361,7 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
                                     </label>
                                     <select
                                         value={isFeatured}
-                                        onChange={(e) => setIsFeatured(e.target.value)}
+                                        onChange={(e) => handleFeaturedChange(e.target.value)}
                                         className={`w-full py-2.5 px-4 rounded-lg border ${
                                             isDarkMode
                                                 ? 'bg-gray-700 text-white border-gray-600'
@@ -363,6 +372,30 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
                                         <option value="yes">Yes</option>
                                     </select>
                                 </div>
+                                <div>
+                                    <label
+                                        className={`block text-sm font-medium ${
+                                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                                        } mb-1`}
+                                    >
+                                        Special Offer Product
+                                    </label>
+                                    <select
+                                        value={isSpecialOffer}
+                                        onChange={(e) => handleSpecialOfferChange(e.target.value)}
+                                        className={`w-full py-2.5 px-4 rounded-lg border ${
+                                            isDarkMode
+                                                ? 'bg-gray-700 text-white border-gray-600'
+                                                : 'bg-gray-100 text-gray-800 border-gray-300'
+                                        } focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200`}
+                                    >
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <label
                                         className={`block text-sm font-medium ${

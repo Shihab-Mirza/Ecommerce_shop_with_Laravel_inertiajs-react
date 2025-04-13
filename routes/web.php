@@ -7,6 +7,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\OfferController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -54,7 +55,8 @@ Route::put('/products/{id}', [ProductController::class, 'update'])->name('produc
 Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('products.destroy');
 
 
-
+Route::get('/add_featured_product', [HomePageController::class, 'create_featured_product']);
+Route::post('/add_new_product', [HomePageController::class, 'store'])->name('products.store');
 Route::get('/view_featured_products', [HomePageController::class, 'feature_product_index'])->name('feature_product.index');
 Route::get('/feature_products/{id}/edit', [HomePageController::class, 'feature_product_edit'])->name('feature_product.edit');
 Route::put('/feature_products/{id}', [HomePageController::class, 'feature_product_update'])->name('feature_product.update');
@@ -67,28 +69,36 @@ Route::delete('/feature_products/{id}', [HomePageController::class, 'feature_pro
 
 
 Route::get('/add_image_slideshow', [HomepageController::class, 'index'])->name('add_image_slideshow');
-    Route::post('/homepages', [HomepageController::class, 'storehomepageimage'])->name('homepages.store');
-    Route::put('/homepages/{id}', [HomepageController::class, 'update'])->name('homepages.update');
-    Route::delete('/homepages/{id}', [HomepageController::class, 'destroy'])->name('homepages.destroy');
-
-
-    Route::get('/add_featured_product', [HomePageController::class, 'create_featured_product']);
-    Route::post('/add_new_product', [HomePageController::class, 'store'])->name('products.store');
+Route::post('/homepages', [HomepageController::class, 'storehomepageimage'])->name('homepages.store');
+Route::put('/homepages/{id}', [HomepageController::class, 'update'])->name('homepages.update');
+Route::delete('/homepages/{id}', [HomepageController::class, 'destroy'])->name('homepages.destroy');
 
 
 
 
+Route::get('/add_special_offer_product', [HomePageController::class, 'create_special_offer_product']);
+Route::post('/add_new_special_offer_product', [HomePageController::class, 'special_offer_store']);
+Route::get('/view_special_offer_products', [HomePageController::class, 'special_offer_index']);
+Route::get('/special_offer_products/{id}/edit', [HomePageController::class, 'special_offer_edit']);
+Route::put('/special_offer_products/{id}', [HomePageController::class, 'special_offer_update']);
+Route::delete('/special_offer_products/{id}', [HomePageController::class, 'special_offer_destroy']);
 
 
-    Route::middleware(['auth', 'admin'])->group(function () {
-        Route::get('/assign_role', [UserManagementController::class, 'index'])->name('users.index');
-        Route::post('/assign_role/{id}/usertype', [UserManagementController::class, 'updateUserType'])->name('users.updateUserType');
-        Route::delete('/assign_role/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
-    });
+Route::get('/manage_special_offer', [HomePageController::class, 'manage_special_offer_index'])->name('special_offers.index');
+Route::post('/manage_special_offer/save', [HomePageController::class, 'manage_special_offer_save'])->name('special_offers.save');
 
 
 
 
+Route::get('/assign_role', [UserManagementController::class, 'index'])->name('users.index');
+Route::post('/assign_role/{id}/usertype', [UserManagementController::class, 'updateUserType'])->name('users.updateUserType');
+Route::delete('/assign_role/{id}', [UserManagementController::class, 'destroy'])->name('users.destroy');
+
+
+
+
+Route::get('/add_offer', [OfferController::class, 'index'])->name('offers.index');
+Route::post('/offers/save', [OfferController::class, 'save'])->name('offers.save');
 
 });
 

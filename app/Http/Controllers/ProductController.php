@@ -15,7 +15,7 @@ class ProductController extends Controller
     public function create()
     {
         return Inertia::render('AdminDashboard/AddProduct', [
-            'products' => Product::all(),
+            'produaacts' => Product::all(),
             'categories' => Category::all(['id', 'name']),
             'subcategories' => Subcategory::all(['id', 'sub_category_name', 'category_id']),
             'brands' => Brand::all(['id', 'brand_name', 'subcategory_id', 'category_id']),
@@ -191,7 +191,6 @@ class ProductController extends Controller
             'flash' => session('success'),
         ]);
     }
-
     public function update(Request $request, $id)
     {
         $product = Product::findOrFail($id);
@@ -205,6 +204,7 @@ class ProductController extends Controller
             'brand_id' => 'required|exists:brands,id',
             'quantity' => 'required|integer|min:0',
             'is_featured' => 'required|in:yes,no',
+            'is_special_offer' => 'required|in:yes,no',
             'image' => 'nullable|image|max:2048',
             'spec_name_1' => 'nullable|string|max:255',
             'spec_detail_1' => 'nullable|string|max:255',
@@ -238,6 +238,13 @@ class ProductController extends Controller
             'spec_detail_15' => 'nullable|string|max:255',
         ]);
 
+        // Validate is_featured and is_special_offer logic
+        if ($request->is_featured === 'yes' && $request->is_special_offer === 'yes') {
+            return back()->withErrors(['is_special_offer' => 'Special offer cannot be yes if featured is yes.']);
+        }
+
+  
+
         $imagePath = $product->image;
         if ($request->hasFile('image')) {
             if ($imagePath && Storage::disk('public')->exists($imagePath)) {
@@ -261,6 +268,7 @@ class ProductController extends Controller
             'brand_id' => $request->brand_id,
             'quantity' => $request->quantity,
             'is_featured' => $request->is_featured,
+            'is_special_offer' => $request->is_special_offer,
             'image' => $imagePath,
             'spec_name_1' => $request->input('spec_name_1'),
             'spec_detail_1' => $request->input('spec_detail_1'),

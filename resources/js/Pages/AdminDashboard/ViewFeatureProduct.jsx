@@ -120,7 +120,7 @@ const ViewFeatureProduct = ({ auth, products, categories, subcategories, brands,
                 >
                     <div className={`max-w-full mx-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-lg p-6 transition-colors duration-300`}>
                         <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'} mb-6`}>
-                            View Featured Products
+                            View Special Offer Products
                         </h2>
 
                         {successMessage && (
@@ -154,7 +154,7 @@ const ViewFeatureProduct = ({ auth, products, categories, subcategories, brands,
                             <table className={`w-full table-auto text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                                 <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} sticky top-0 z-10`}>
                                     <tr>
-                                        <th className="py-3 px-3 text-left font-semibold w-12 text-base">S.No</th>
+                                        <th className="py-3 px-3 text-left font-semibold w-12 text-base">SI</th>
                                         <th className="py-3 px-3 text-left font-semibold w-16 text-base">Image</th>
                                         <th className="py-3 px-3 text-left font-semibold max-w-xs text-base">Name</th>
                                         <th className="py-3 px-3 text-left font-semibold w-24 text-base">Code</th>

@@ -22,6 +22,8 @@ class Product extends Model
         'quantity',
         'description',
         'is_featured',
+        'is_special_offer',
+        'is_offered_product',
         'image',
         'spec_name_1',
         'spec_detail_1',
@@ -70,5 +72,12 @@ class Product extends Model
     public function brand()
     {
         return $this->belongsTo(Brand::class);
+    }
+
+
+
+    public function offer()
+    {
+        return $this->hasOne(Offer::class, 'product_id');
     }
 }

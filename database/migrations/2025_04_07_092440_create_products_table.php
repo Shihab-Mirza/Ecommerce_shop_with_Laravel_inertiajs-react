@@ -21,6 +21,9 @@ return new class extends Migration
             $table->integer('quantity')->default(0);
             $table->string('description')->nullable();
             $table->string('is_featured')->default('no');
+            $table->string('is_special_offer')->default('no');
+            $table->string('is_offered_product')->default('no');
+
             $table->string('image')->nullable();
 
             $table->string('spec_name_1')->nullable();
