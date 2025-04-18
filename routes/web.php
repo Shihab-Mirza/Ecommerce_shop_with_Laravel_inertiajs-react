@@ -16,12 +16,34 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/search', [HomeController::class, 'search'])->name('search'); // Added search route
+
+
+Route::get('/show_all_category', [HomeController::class, 'index_category']);
+
+Route::get('/products/category/{id}', [HomeController::class, 'byCategory'])->name('products.by.category');
+Route::get('/products/subcategory/{id}', [HomeController::class, 'bySubcategory'])->name('products.by.subcategory');
+Route::get('/products/brand/{id}', [HomeController::class, 'byBrand'])->name('products.by.brand');
+
+Route::get('/view-products/{id}', [HomeController::class, 'showProduct'])->name('products.view');
+Route::get('/product/{id}', [HomeController::class, 'showProduct'])->name('product.show');
+
 
 Route::get('/dashboard', function () {
     return Inertia::render('AdminDashboard/Dashboard', [
         'activeLink' => 'dashboard',
     ]);
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
+
+
+
+
+
+
+
+
+
+
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 Route::get('/add_category', [CategoryController::class, 'create']);
@@ -56,7 +78,7 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('pr
 
 
 Route::get('/add_featured_product', [HomePageController::class, 'create_featured_product']);
-Route::post('/add_new_product', [HomePageController::class, 'store'])->name('products.store');
+Route::post('/add_new_featured_product', [HomePageController::class, 'store']);
 Route::get('/view_featured_products', [HomePageController::class, 'feature_product_index'])->name('feature_product.index');
 Route::get('/feature_products/{id}/edit', [HomePageController::class, 'feature_product_edit'])->name('feature_product.edit');
 Route::put('/feature_products/{id}', [HomePageController::class, 'feature_product_update'])->name('feature_product.update');

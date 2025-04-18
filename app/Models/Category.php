@@ -13,7 +13,7 @@ class Category extends Model
 
     // Mass assignable fields
     protected $fillable = ['name'];
-    public function subcategory()
+    public function subcategories()
     {
         return $this->hasMany(Subcategory::class);
     }

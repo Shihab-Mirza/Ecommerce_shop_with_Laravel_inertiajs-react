@@ -149,7 +149,7 @@ const AddFeatureProduct = ({ auth, errors: initialErrors, flash, categories, sub
         formData.append('spec_name_15', specName15);
         formData.append('spec_detail_15', specDetail15);
 
-        Inertia.post('/add_new_product', formData, {
+        Inertia.post('/add_new_featured_product', formData, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: (page) => {

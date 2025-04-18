@@ -4,6 +4,7 @@ import { faBars, faTimes, faSignInAlt, faUserPlus, faSearch, faSignOutAlt, faSho
 import { Link } from '@inertiajs/react';
 import LoginModal from '@/Pages/Landing/LoginModal';
 import RegistrationModal from '@/Pages/Landing/RegistrationModal';
+import { Inertia } from '@inertiajs/inertia';
 
 function Navbar({ auth, cartCount = 0 }) {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -36,7 +37,9 @@ function Navbar({ auth, cartCount = 0 }) {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        Inertia.get('/search', { query: searchQuery });
+        if (searchQuery.trim()) {
+            Inertia.get('/search', { query: searchQuery });
+        }
     };
 
     const authButtonStyles = "px-5 py-2 text-sm text-gray-100 font-medium tracking-wide uppercase rounded-full bg-gray-800/80 border border-gray-700/50 hover:bg-gray-700 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500/30 transition-all duration-300 flex items-center gap-2 shadow-sm";
@@ -60,7 +63,7 @@ function Navbar({ auth, cartCount = 0 }) {
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
-                            <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
+                            <button type="submit" className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
                                 <FontAwesomeIcon icon={faSearch} size="sm" />
                             </button>
                         </form>
@@ -126,7 +129,7 @@ function Navbar({ auth, cartCount = 0 }) {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
-                                <button className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
+                                <button type="submit" className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-900 transition duration-300">
                                     <FontAwesomeIcon icon={faSearch} size="sm" />
                                 </button>
                             </form>
