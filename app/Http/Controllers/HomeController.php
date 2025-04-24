@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Homepage;
+use App\Models\Cart;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -258,18 +259,35 @@ class HomeController extends Controller
             'categories' => $categories,
         ]);
     }
-
-    public function showProduct($id)
+    public function view_full_Product($id)
     {
-        $product = Product::with(['category', 'subcategory', 'brand', 'offer'])->findOrFail($id);
-        $categories = Category::with(['subcategories.brands'])->get();
+
+
+        $product = Product::with([
+            'category',
+            'subcategory',
+            'brand',
+            'offer',
+            'reviews.user' // Load reviews with user details
+        ])->findOrFail($id);
+        $categories = Category::with('subcategories')->get();
 
         return Inertia::render('Landing/ShowProduct', [
-            'auth' => [
-                'user' => Auth::user(),
-            ],
             'product' => $product,
             'categories' => $categories,
+
         ]);
     }
+
+
+
+
+
+
+
+
+
+
+
+
 }

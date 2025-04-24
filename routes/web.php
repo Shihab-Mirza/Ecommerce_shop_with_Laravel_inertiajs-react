@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\HomePageController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\BrandController;
@@ -19,6 +21,15 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/search', [HomeController::class, 'search'])->name('search'); // Added search route
 
 
+Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
+
+
+Route::post('/cart/update', [CartController::class, 'update'])->name('cart.update');
+Route::post('/cart/remove', [CartController::class, 'remove'])->name('cart.remove');
+
+
+
+
 Route::get('/show_all_category', [HomeController::class, 'index_category']);
 
 Route::get('/products/category/{id}', [HomeController::class, 'byCategory'])->name('products.by.category');
@@ -26,7 +37,11 @@ Route::get('/products/subcategory/{id}', [HomeController::class, 'bySubcategory'
 Route::get('/products/brand/{id}', [HomeController::class, 'byBrand'])->name('products.by.brand');
 
 Route::get('/view-products/{id}', [HomeController::class, 'showProduct'])->name('products.view');
-Route::get('/product/{id}', [HomeController::class, 'showProduct'])->name('product.show');
+Route::get('/product/{id}', [HomeController::class, 'view_full_Product'])->name('products.show');
+Route::post('/products/{productId}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+
+
 
 
 Route::get('/dashboard', function () {

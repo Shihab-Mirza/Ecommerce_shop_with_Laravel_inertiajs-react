@@ -80,4 +80,10 @@ class Product extends Model
     {
         return $this->hasOne(Offer::class, 'product_id');
     }
+
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
+    }
 }

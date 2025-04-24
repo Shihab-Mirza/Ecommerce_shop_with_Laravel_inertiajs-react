@@ -10,25 +10,22 @@ function RegistrationModal({ closeModal, toggleToLoginModal }) {
     });
 
     const [successMessage, setSuccessMessage] = useState(null);
-    const [timer, setTimer] = useState(4); // Start timer at 3 seconds
+    const [timer, setTimer] = useState(4);
     const [timerInterval, setTimerInterval] = useState(null);
 
     useEffect(() => {
-        // Set up timer interval when successMessage is shown
         if (successMessage) {
             const interval = setInterval(() => {
                 setTimer((prev) => {
                     if (prev <= 1) {
                         clearInterval(interval);
-                        window.location.reload(); // Refresh the page after countdown reaches 0
+                        window.location.reload();
                         return 0;
                     }
                     return prev - 1;
                 });
-            }, 1000); // Update timer every 1 second
+            }, 1000);
             setTimerInterval(interval);
-
-            // Cleanup interval on component unmount or when timer finishes
             return () => clearInterval(interval);
         }
     }, [successMessage]);
@@ -44,120 +41,176 @@ function RegistrationModal({ closeModal, toggleToLoginModal }) {
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-300">
-            <div className="bg-white p-4 sm:p-5 lg:p-6 rounded-3xl shadow-2xl w-[90%] sm:w-[320px] md:w-[360px] lg:w-[450px] max-w-full animate-fadeIn relative overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md transition-all duration-700">
+            <div className="relative bg-white p-6 sm:p-8 rounded-3xl shadow-2xl w-full max-w-md animate-slideIn overflow-hidden border border-gray-100/20">
                 <button
                     onClick={closeModal}
-                    className="absolute top-4 right-4 text-gray-600 text-xl font-semibold hover:text-gray-800 transition duration-200"
+                    className="absolute top-4 right-4 text-gray-600 text-xl font-semibold hover:text-gray-800 transition-all duration-300 hover:scale-110"
                 >
                     ×
                 </button>
 
-                <h2 className="text-2xl font-semibold text-center text-gray-900 mb-4">Create an Account</h2>
+                <h2 className="text-2xl font-bold text-center text-gray-900 mb-6 tracking-tight">
+                    Create Account
+                </h2>
 
                 {errors?.general && (
-                    <div className="mb-3 text-red-500 text-sm text-center">{errors.general}</div>
+                    <div className="mb-4 text-red-500 text-sm text-center bg-red-100/50 p-3 rounded-xl">
+                        {errors.general}
+                    </div>
                 )}
 
-                {/* Display success message */}
                 {successMessage && (
-                    <div className="mb-4 text-green-500 text-sm text-center">
+                    <div className="mb-4 text-green-500 text-sm text-center bg-green-100/50 p-3 rounded-xl">
                         {successMessage}
+                        <div className="mt-2 text-gray-700 text-sm">
+                            Closing in {timer}s...
+                        </div>
                     </div>
                 )}
 
-                {/* Timer display when registration is successful */}
-                {successMessage && (
-                    <div className="mb-4 text-center text-gray-700">
-                        <span>Closing in {timer}s...</span>
-                    </div>
-                )}
-
-                {/* Form only shows if registration hasn't been successful */}
                 {!successMessage && (
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="relative">
                             <input
                                 type="text"
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="w-full p-3 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 placeholder:text-gray-400"
-                                placeholder="Enter your full name"
+                                className="peer w-full p-3 pt-6 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-gray-50/50"
+                                placeholder="Full Name"
                                 required
-                                minLength={3}
-                                maxLength={255}
+                                minLength="3"
+                                maxLength="255"
                             />
-                            {errors?.name && <span className="text-red-500 text-xs">{errors.name}</span>}
+                            <label
+                                htmlFor="name"
+                                className="absolute left-3 top-1 text-sm font-medium text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-sm peer-focus:text-gray-500"
+                            >
+                                Full Name
+                            </label>
+                            {errors?.name && <span className="text-red-500 text-xs mt-1 block">{errors.name}</span>}
                         </div>
 
-                        <div className="mb-3">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                        <div className="relative">
                             <input
                                 type="email"
                                 id="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
-                                className="w-full p-3 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 placeholder:text-gray-400"
-                                placeholder="Enter your email"
+                                className="peer w-full p-3 pt-6 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-gray-50/50"
+                                placeholder="Email Address"
                                 required
+                                minLength="4"
+                                maxLength="255"
+                                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                title="Please enter a valid email address (e.g., user@example.com)"
                             />
-                            {errors?.email && <span className="text-red-500 text-xs">{errors.email}</span>}
+                            <label
+                                htmlFor="email"
+                                className="absolute left-3 top-1 text-sm font-medium text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-sm peer-focus:text-gray-500"
+                            >
+                                Email Address
+                            </label>
+                            {errors?.email && <span className="text-red-500 text-xs mt-1 block">{errors.email}</span>}
                         </div>
 
-                        <div className="mb-3">
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                        <div className="relative">
                             <input
                                 type="password"
                                 id="password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
-                                className="w-full p-3 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 placeholder:text-gray-400"
-                                placeholder="Enter your password"
+                                className="peer w-full p-3 pt-6 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-gray-50/50"
+                                placeholder="Password"
                                 required
-                                minLength={8}
+                                minLength="8"
+                                maxLength="50"
+
+                                title="Password must be at least 8 characters long, including one number, one lowercase, and one uppercase letter"
                             />
-                            {errors?.password && <span className="text-red-500 text-xs">{errors.password}</span>}
+                            <label
+                                htmlFor="password"
+                                className="absolute left-3 top-1 text-sm font-medium text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-sm peer-focus:text-gray-500"
+                            >
+                                Password
+                            </label>
+                            {errors?.password && <span className="text-red-500 text-xs mt-1 block">{errors.password}</span>}
                         </div>
 
-                        <div className="mb-3">
-                            <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                        <div className="relative">
                             <input
                                 type="password"
                                 id="password_confirmation"
                                 value={data.password_confirmation}
                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                className="w-full p-3 border-2 border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-300 placeholder:text-gray-400"
-                                placeholder="Confirm your password"
+                                className="peer w-full p-3 pt-6 border-2 border-gray-200 rounded-xl text-gray-900 placeholder-transparent focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 bg-gray-50/50"
+                                placeholder="Confirm Password"
                                 required
-                                minLength={8}
+                                minLength="8"
+                                maxLength="50"
+                                title="Password confirmation must match the password"
                             />
+                            <label
+                                htmlFor="password_confirmation"
+                                className="absolute left-3 top-1 text-sm font-medium text-gray-500 transition-all duration-300 peer-placeholder-shown:top-4 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-focus:top-1 peer-focus:text-sm peer-focus:text-gray-500"
+                            >
+                                Confirm Password
+                            </label>
+                            {errors?.password_confirmation && (
+                                <span className="text-red-500 text-xs mt-1 block">{errors.password_confirmation}</span>
+                            )}
                         </div>
 
-                        <div className="mb-4">
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2 rounded-2xl hover:bg-emerald-700 transition duration-300 focus:outline-none transform hover:scale-105 shadow-md hover:shadow-xl ${processing ? 'opacity-75 cursor-not-allowed' : ''}`}
-                            >
-                                {processing ? 'Registering...' : 'Register'}
-                            </button>
-                        </div>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-xl font-semibold hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${processing ? 'opacity-70 cursor-not-allowed' : ''}`}
+                        >
+                            {processing ? (
+                                <span className="flex items-center justify-center">
+                                    <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+                                    Registering...
+                                </span>
+                            ) : (
+                                'Register'
+                            )}
+                        </button>
                     </form>
                 )}
 
-                <div className="text-center mt-4">
+                <div className="text-center mt-6">
                     <span className="text-sm text-gray-600">
                         Already have an account?{' '}
-                        <button
+                        <span
                             onClick={toggleToLoginModal}
-                            className="text-sm text-emerald-600 hover:text-emerald-700 transition duration-300"
+                            className="text-emerald-600 hover:text-emerald-700 transition-all duration-300 cursor-pointer font-medium"
                         >
                             Log In
-                        </button>
+                        </span>
                     </span>
                 </div>
+
+                <style>
+                    {`
+                        @keyframes slideIn {
+                            from {
+                                transform: translateY(30px);
+                                opacity: 0;
+                            }
+                            to {
+                                transform: translateY(0);
+                                opacity: 1;
+                            }
+                        }
+                        .animate-slideIn {
+                            animation: slideIn 0.5s ease-out;
+                        }
+                    `}
+                </style>
             </div>
         </div>
     );

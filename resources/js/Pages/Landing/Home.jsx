@@ -2,6 +2,7 @@ import { Head } from '@inertiajs/react';
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
+import CartModal from './CartModal';
 import SecondaryNavBar from './SecondaryNavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
