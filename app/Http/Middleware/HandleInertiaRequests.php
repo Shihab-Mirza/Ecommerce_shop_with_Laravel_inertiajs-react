@@ -38,9 +38,11 @@ class HandleInertiaRequests extends Middleware
             return Category::with(['subcategories.brands'])->get();
         });
 
-        // Initialize cart count and cart items
+        // Initialize cart count, cart items, checkout token, and cart ID
         $cartCount = 0;
         $cartItems = [];
+        $checkoutToken = null;
+        $cartId = null;
 
         try {
             if ($request->user()) {
@@ -50,7 +52,7 @@ class HandleInertiaRequests extends Middleware
                     $cartCount = $cart->items()->distinct('product_id')->count('product_id');
                     $cartItems = $cart->items()
                         ->with(['product' => function ($query) {
-                            $query->select('id', 'name', 'price'); // Removed image
+                            $query->select('id', 'name', 'price');
                         }])
                         ->get()
                         ->map(function ($item) {
@@ -64,6 +66,8 @@ class HandleInertiaRequests extends Middleware
                                 'total_price' => $product ? (float)$product->price * $item->quantity : 0.0,
                             ];
                         })->toArray();
+                    $checkoutToken = $cart->checkout_token;
+                    $cartId = $cart->id;
                 }
             } else {
                 // For guest users, fetch cart by session_id
@@ -73,7 +77,7 @@ class HandleInertiaRequests extends Middleware
                     $cartCount = $cart->items()->distinct('product_id')->count('product_id');
                     $cartItems = $cart->items()
                         ->with(['product' => function ($query) {
-                            $query->select('id', 'name', 'price'); // Removed image
+                            $query->select('id', 'name', 'price');
                         }])
                         ->get()
                         ->map(function ($item) {
@@ -87,6 +91,8 @@ class HandleInertiaRequests extends Middleware
                                 'total_price' => $product ? (float)$product->price * $item->quantity : 0.0,
                             ];
                         })->toArray();
+                    $checkoutToken = $cart->checkout_token;
+                    $cartId = $cart->id;
                 }
             }
 
@@ -96,6 +102,8 @@ class HandleInertiaRequests extends Middleware
                 'session_id' => $request->session()->getId(),
                 'cart_count' => $cartCount,
                 'cart_items' => $cartItems,
+                'checkout_token' => $checkoutToken,
+                'cart_id' => $cartId,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in HandleInertiaRequests middleware', [
@@ -112,6 +120,8 @@ class HandleInertiaRequests extends Middleware
             'categories' => $categories,
             'cartCount' => $cartCount,
             'cartItems' => $cartItems,
+            'checkoutToken' => $checkoutToken,
+            'cartId' => $cartId,
         ];
     }
 }

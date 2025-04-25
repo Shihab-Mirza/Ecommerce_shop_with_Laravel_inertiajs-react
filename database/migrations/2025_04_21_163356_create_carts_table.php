@@ -14,6 +14,7 @@ return new class extends Migration
           // Foreign key with ON UPDATE CASCADE and ON DELETE CASCADE
             $table->foreign('session_id')->references('id')->on('sessions')->onDelete('cascade');
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('checkout_token')->nullable()->unique();
             $table->timestamps();
 
         });

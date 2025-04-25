@@ -426,7 +426,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                             disabled={processing}
                                             className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg text-white font-semibold text-sm transition-all duration-300 ${
                                                 processing
-                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    ? 'bg-indigo-600 opacity-60 cursor-not-allowed'
                                                     : 'bg-indigo-600 hover:bg-indigo-700'
                                             }`}
                                             whileHover={{ scale: 1.05 }}
@@ -635,12 +635,8 @@ export default function ShowProduct({ auth, product, categories }) {
                                         <motion.button
                                             type="submit"
                                             disabled={reviewProcessing || reviewRating === 0}
-                                            className={`flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold text-sm transition-all duration-300 ${
-                                                reviewProcessing || reviewRating === 0
-                                                    ? 'bg-gray-400 cursor-not-allowed'
-                                                    : 'bg-gradient-to-r from-emerald-600 to-emerald-400'
-                                            } shadow-lg`}
-                                            whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(79, 70, 229, 0.5)' }}
+                                            className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-lg disabled:opacity-60 "
+                                            whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)' }}
                                             whileTap={{ scale: 0.95 }}
                                         >
                                             <FontAwesomeIcon icon={faPaperPlane} />

@@ -11,13 +11,15 @@ function Navbar({ auth }) {
     const { props } = usePage();
     const [cartCount, setCartCount] = useState(props.cartCount || 0);
     const [cartItems, setCartItems] = useState(props.cartItems || []);
-
     const [menuOpen, setMenuOpen] = useState(false);
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [registrationModalOpen, setRegistrationModalOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [cartModalOpen, setCartModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+
+    // State to track if user attempted checkout while not logged in
+    const [pendingCheckout, setPendingCheckout] = useState(false);
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
@@ -68,14 +70,12 @@ function Navbar({ auth }) {
             });
 
             if (response.data.success) {
-                // Update cartItems locally
                 const updatedItems = cartItems.map((item) =>
                     item.id === itemId
                         ? { ...item, quantity: parseInt(quantity), total_price: item.price * quantity }
                         : item
                 );
                 setCartItems(updatedItems);
-                // Update cart count (in case it changes, though unlikely here)
                 setCartCount(updatedItems.length);
             } else {
                 alert(response.data.error || 'Failed to update cart item');
@@ -93,10 +93,8 @@ function Navbar({ auth }) {
             });
 
             if (response.data.success) {
-                // Remove item from cartItems locally
                 const updatedItems = cartItems.filter((item) => item.id !== itemId);
                 setCartItems(updatedItems);
-                // Update cart count
                 setCartCount(updatedItems.length);
             } else {
                 alert(response.data.error || 'Failed to remove cart item');
@@ -104,6 +102,25 @@ function Navbar({ auth }) {
         } catch (error) {
             console.error('Error removing cart item:', error);
             alert('An error occurred while removing the cart item');
+        }
+    };
+
+    // Handle checkout click
+    const handleCheckout = () => {
+        if (!auth.user) {
+            setPendingCheckout(true); // Set flag to redirect after login
+            setLoginModalOpen(true); // Open login modal
+        } else {
+            Inertia.get(`/checkout2/${props.cartId}/${props.checkoutToken}`);
+        }
+    };
+
+    // Modified toggleLoginModal to handle post-login redirect
+    const handleLoginSuccess = () => {
+        setLoginModalOpen(false);
+        if (pendingCheckout) {
+            setPendingCheckout(false);
+            Inertia.get(`/checkout2/${props.cartId}/${props.checkoutToken}`);
         }
     };
 
@@ -280,12 +297,12 @@ function Navbar({ auth }) {
                                             <span>Total:</span>
                                             <span>${cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
                                         </div>
-                                        <Link
-                                            href="/checkout"
+                                        <button
+                                            onClick={handleCheckout}
                                             className="w-full mt-4 px-4 py-2 bg-gray-800 text-white rounded-full text-center hover:bg-gray-700 transition duration-300"
                                         >
                                             Proceed to Checkout
-                                        </Link>
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -295,7 +312,7 @@ function Navbar({ auth }) {
             )}
 
             {loginModalOpen && (
-                <LoginModal closeModal={toggleLoginModal} toggleToRegistrationModal={toggleRegistrationModal} />
+                <LoginModal closeModal={toggleLoginModal} toggleToRegistrationModal={toggleRegistrationModal} onLoginSuccess={handleLoginSuccess} />
             )}
             {registrationModalOpen && (
                 <RegistrationModal closeModal={toggleRegistrationModal} toggleToLoginModal={toggleLoginModal} />

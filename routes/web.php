@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SslCommerzPaymentController;
+
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\HomePageController;
@@ -17,9 +19,25 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/search', [HomeController::class, 'search'])->name('search'); // Added search route
 
+
+
+Route::get('/', [HomeController::class, 'index'])->name('home');
+
+    Route::get('/checkout1', [SslCommerzPaymentController::class, 'exampleEasyCheckout']);
+    Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
+
+    Route::post('/pay', [SslCommerzPaymentController::class, 'index']);
+    Route::post('/pay-via-ajax', [SslCommerzPaymentController::class, 'payViaAjax']);
+
+Route::post('/success', [SslCommerzPaymentController::class, 'success']); // Matches success_url
+Route::post('/fail', [SslCommerzPaymentController::class, 'fail']);       // Matches failed_url
+Route::post('/cancel', [SslCommerzPaymentController::class, 'cancel']);   // Matches cancel_url
+Route::post('/ipn', [SslCommerzPaymentController::class, 'ipn']);
+
+
+
+Route::get('/search', [HomeController::class, 'search'])->name('search');
 
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
 
