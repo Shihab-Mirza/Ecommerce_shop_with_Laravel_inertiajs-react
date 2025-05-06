@@ -1,141 +1,121 @@
-import { Head } from '@inertiajs/react';
-import React, { useState, useEffect, useCallback, memo } from 'react';
+import { Head, Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import CartModal from './CartModal';
 import SecondaryNavBar from './SecondaryNavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
-  faKeyboard,
-  faMouse,
-  faHeadphones,
-  faDesktop,
-  faCamera,
-  faVolumeUp,
-  faMicrochip,
-  faPrint,
-  faNetworkWired,
-  faLaptop,
-  faMobileAlt,
-  faHeadphonesAlt,
-  faList
+    faDesktop, faLaptop, faMicrochip, faMemory, faHdd, faSdCard,
+    faServer, faKeyboard, faMouse, faHeadphones, faPrint, faPlug,
+    faFan, faGamepad, faCamera, faTv, faChevronDown, faNetworkWired,
+    faEthernet, faBatteryFull, faWifi, faMicrophone, faVolumeHigh, faMobile,faList
 } from '@fortawesome/free-solid-svg-icons';
+import {
+  MdMonitor, MdDeveloperBoard, MdRouter, MdStorage, MdSpeaker,
+  MdCable, MdBatteryChargingFull, MdCloud, MdSecurity, MdSmartphone, MdTablet,
+  MdHeadsetMic, MdPower, MdVideogameAsset, MdNetworkCheck
+} from 'react-icons/md';
+import { FiCpu, FiHardDrive, FiMonitor } from 'react-icons/fi';
+import { CircuitBoard, Usb, Webcam, Headphones as LucideHeadphones } from 'lucide-react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 
 const colors = ['text-black'];
-const Category = [
-  { name: 'Keyboard', icon: faKeyboard },
-  { name: 'Mouse', icon: faMouse },
-  { name: 'Headsets', icon: faHeadphones },
-  { name: 'Monitors', icon: faDesktop },
-  { name: 'Webcams', icon: faCamera },
-  { name: 'Speakers', icon: faVolumeUp },
-  { name: 'Processors', icon: faMicrochip },
-  { name: 'Printers', icon: faPrint },
-  { name: 'Networking', icon: faNetworkWired },
-  { name: 'Laptops', icon: faLaptop },
-  { name: 'Earbuds', icon: faHeadphonesAlt },
-  { name: 'Mobile Phones', icon: faMobileAlt },
-  { name: 'Show All', icon: faList }
-];
 
-// Memoize ProductCard to prevent unnecessary re-renders
-const ProductCard = memo(({ product, handleImageError }) => (
-  <div
-    className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative group"
-  >
-    {product.is_offered_product === 'yes' && product.discount_value ? (
-      <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-        Save {parseFloat(product.discount_value).toFixed(2)} Tk
-      </span>
-    ) : product.is_special_offer === 'yes' && product.discount_value ? (
-      <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
-        Save {parseFloat(product.discount_value).toFixed(2)} Tk
-      </span>
-    ) : (
-      <div className="absolute top-2 left-2 animate-fire">
-        <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
-      </div>
-    )}
-    {product.is_new_arrival && (
-      <span className="absolute top-2 right-2 bg-gradient-to-r from-teal-400 to-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
-        New Arrival
-      </span>
-    )}
-    <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
-      {product.image && !product.imageError ? (
-        <img
-          src={product.image}
-          alt={product.name}
-          className={`w-full h-40 object-contain mb-2 rounded-md ${
-            (product.is_offered_product === 'yes' || product.is_special_offer === 'yes' || product.is_new_arrival) && product.discount_value ? 'mt-4' : ''
-          }`}
-          onError={() => handleImageError(product.id)}
-          loading="lazy"
-        />
-      ) : (
-        <div
-          className={`w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm ${
-            (product.is_offered_product === 'yes' || product.is_special_offer === 'yes' || product.is_new_arrival) && product.discount_value ? 'mt-4' : ''
-          }`}
-        >
-          No image available
-        </div>
-      )}
-    </InertiaLink>
-    <div className="mt-auto">
-      <InertiaLink href={`/product/${product.id}`}>
-        <h3 className="text-sm font-semibold mb-2 text-blue-600 hover:text-blue-800">
-          {product.name}
-        </h3>
-      </InertiaLink>
-      {(product.is_offered_product === 'yes' || product.is_special_offer === 'yes') && product.offer_price ? (
-        <div className="flex flex-col items-center">
-          <p className="text-gray-400 text-sm line-through tracking-wide">
-            {parseFloat(product.price).toFixed(2)} Tk
-          </p>
-          <p className="text-lg font-bold text-red-600">
-            {parseFloat(product.offer_price).toFixed(2)} Tk
-          </p>
-        </div>
-      ) : (
-        <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
-      )}
-    </div>
-    {(product.is_special_offer === 'yes' || product.is_new_arrival) && (
-      <button className={`mt-4 text-sm font-medium text-white bg-gradient-to-r ${product.is_special_offer ? 'from-red-500 to-pink-500' : 'from-teal-500 to-purple-600'} px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hover:${product.is_special_offer ? 'from-red-600 hover:to-pink-600' : 'from-teal-600 hover:to-purple-700'}`}>
-        Shop Now
-      </button>
-    )}
-  </div>
-));
+// Icon mapping to match ManageCategoryIcon
+const iconMapping = {
+  'fa-keyboard': faKeyboard,
+  'fa-mouse': faMouse,
+  'fa-headphones': faHeadphones,
+  'fa-desktop': faDesktop,
+  'fa-camera': faCamera,
+  'fa-volume-high': faVolumeHigh,
+  'fa-microchip': faMicrochip,
+  'fa-print': faPrint,
+  'fa-network-wired': faNetworkWired,
+  'fa-laptop': faLaptop,
+  'fa-mobile': faMobile,
+  'fa-memory': faMemory,           // Added unused icon
+  'fa-hdd': faHdd,                 // Added unused icon
+  'fa-sd-card': faSdCard,          // Added unused icon
+  'fa-server': faServer,           // Added unused icon
+  'fa-plug': faPlug,               // Added unused icon
+  'fa-fan': faFan,                 // Added unused icon
+  'fa-gamepad': faGamepad,         // Added unused icon
+  'fa-tv': faTv,                   // Added unused icon
+  'fa-chevron-down': faChevronDown, // Added unused icon
+  'fa-ethernet': faEthernet,       // Added unused icon
+  'fa-battery-full': faBatteryFull, // Added unused icon
+  'fa-wifi': faWifi,               // Added unused icon
+  'fa-microphone': faMicrophone,   // Added unused icon
+  'fa-list': faList,
+  'md-monitor': MdMonitor,
+  'md-developer-board': MdDeveloperBoard,
+  'md-router': MdRouter,
+  'md-storage': MdStorage,
+  'md-speaker': MdSpeaker,
+  'md-cable': MdCable,
+  'md-battery-charging-full': MdBatteryChargingFull,
+  'md-cloud': MdCloud,
+  'md-security': MdSecurity,
+  'md-smartphone': MdSmartphone,
+  'md-tablet': MdTablet,
+  'md-headset-mic': MdHeadsetMic,
+  'md-power': MdPower,
+  'md-videogame-asset': MdVideogameAsset,
+  'md-network-check': MdNetworkCheck,
+  'fi-cpu': FiCpu,
+  'fi-hard-drive': FiHardDrive,
+  'fi-monitor': FiMonitor,
+  'lucide-circuit-board': CircuitBoard,
+  'lucide-usb': Usb,
+  'lucide-webcam': Webcam,
+  'lucide-headphones': LucideHeadphones,
+};
 
-function Home({ auth, images, categories, featuredProducts, specialOfferProducts, newArrivalProducts }) {
+function Home({ auth, images, categories,category, featuredProducts, specialOfferProducts, newArrivalProducts }) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [imageErrors, setImageErrors] = useState(new Set());
+  const [imageErrors, setImageErrors] = useState({});
 
-  // Optimize slideshow interval
   useEffect(() => {
+    console.log('Featured Products:', featuredProducts);
+    console.log('Special Offer Products:', specialOfferProducts);
+    console.log('New Arrival Products:', newArrivalProducts);
+    console.log('Images:', images);
+    console.log('Categories:', categories);
+
     if (images && images.length > 0) {
+      console.log('Slideshow running, current image:', images[currentImageIndex]?.url);
       const interval = setInterval(() => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
       }, 3000);
+
       return () => clearInterval(interval);
     }
-  }, [images]);
+  }, [currentImageIndex, images]);
 
-  // Optimize image error handling
-  const handleImageError = useCallback((productId) => {
-    setImageErrors((prev) => new Set(prev).add(productId));
-  }, []);
+  const handleImageError = (productId) => {
+    setImageErrors((prev) => ({ ...prev, [productId]: true }));
+  };
 
-  // Prepare products with image error status
-  const prepareProducts = (products, isNewArrival = false) =>
-    products.map((product) => ({
-      ...product,
-      imageError: imageErrors.has(product.id),
-      is_new_arrival: isNewArrival,
-    }));
+  // Filter categories where show_category_icon is 'yes' and add 'Show All'
+  const displayCategories = [
+    ...category.filter(category => category.show_category_icon === 'yes'),
+    { name: 'Show All', icon: 'fa-list' }
+  ];
+
+  const renderIcon = (iconName) => {
+    const iconData = iconMapping[iconName];
+    if (!iconData) return null;
+
+    // Determine icon type based on prefix
+    if (iconName.startsWith('fa-')) {
+      return <FontAwesomeIcon icon={iconData} className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black" />;
+    } else if (iconName.startsWith('lucide-')) {
+      return <span className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
+    } else {
+      return <span className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
+    }
+  };
 
   return (
     <>
@@ -152,32 +132,29 @@ function Home({ auth, images, categories, featuredProducts, specialOfferProducts
               Featured Category
             </h1>
             <div className="grid grid-cols-5 gap-2">
-              {Category.map((item, index) => (
-                <InertiaLink
-                  key={index}
-                  href={item.name === 'Show All' ? '/show_all_category' : `/Category/${item.name.toLowerCase()}`}
-                  className={`card relative bg-gradient-to-br from-${
-                    colors[index % colors.length].split('-')[1]
-                  }-200 to-${
-                    colors[(index + 1) % colors.length].split('-')[1]
-                  }-300 hover:from-${
-                    colors[index % colors.length].split('-')[1]
-                  }-300 hover:to-${
-                    colors[(index + 1) % colors.length].split('-')[1]
-                  }-400 shadow-lg rounded-lg p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl group`}
-                >
-                  <div className="flex flex-col items-center justify-center">
-                    <FontAwesomeIcon
-                      icon={item.icon}
-                      className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black"
-                    />
-                    <h2 className="text-sm font-bold transition-colors duration-300 text-black group-hover:text-gray-700">
-                      {item.name}
-                    </h2>
-                  </div>
-                </InertiaLink>
-              ))}
-            </div>
+  {displayCategories.map((item, index) => (
+    <InertiaLink
+      key={index}
+      href={item.name === 'Show All' ? '/show_all_category' : `/products/category/${item.id}`}
+      className={`card relative bg-gradient-to-br from-${
+        colors[index % colors.length].split('-')[1]
+      }-200 to-${
+        colors[(index + 1) % colors.length].split('-')[1]
+      }-300 hover:from-${
+        colors[index % colors.length].split('-')[1]
+      }-300 hover:to-${
+        colors[(index + 1) % colors.length].split('-')[1]
+      }-400 shadow-lg rounded-lg p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl group`}
+    >
+      <div className="flex flex-col items-center justify-center">
+        {renderIcon(item.icon)}
+        <h2 className="text-sm font-bold transition-colors duration-300 text-black group-hover:text-gray-700">
+          {item.name}
+        </h2>
+      </div>
+    </InertiaLink>
+  ))}
+</div>
           </div>
 
           {/* Image-section-Right with Slideshow and Navigation Bars */}
@@ -189,15 +166,14 @@ function Home({ auth, images, categories, featuredProducts, specialOfferProducts
                   alt={`Slideshow Image ${currentImageIndex + 1}`}
                   className="w-full h-full object-cover rounded-xl transition-opacity duration-500 ease-in-out"
                   onError={(e) => {
+                    console.error(`Failed to load image: ${images[currentImageIndex]?.url}`);
                     e.target.src = '/images/placeholder.jpg';
                   }}
-                  loading="lazy"
                 />
               ) : (
                 <p className="text-gray-500">No images available</p>
               )}
             </div>
-            {/* Navigation Bars (Dots) */}
             <div className="flex justify-center mt-2 space-x-2">
               {images && images.map((_, index) => (
                 <div
@@ -215,8 +191,60 @@ function Home({ auth, images, categories, featuredProducts, specialOfferProducts
         <h1 className="text-2xl font-bold text-center mb-6 mt-0">Featured Products</h1>
         {featuredProducts && featuredProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
-            {prepareProducts(featuredProducts).map((product) => (
-              <ProductCard key={product.id} product={product} handleImageError={handleImageError} />
+            {featuredProducts.map((product, index) => (
+              <div
+                key={product.id || index}
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative"
+              >
+                {product.is_offered_product === 'yes' && product.discount_value ? (
+                  <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    Save {parseFloat(product.discount_value).toFixed(2)} Tk
+                  </span>
+                ) : (
+                  <div className="absolute top-2 left-2 animate-fire">
+                    <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
+                  </div>
+                )}
+                <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
+                  {product.image && !imageErrors[product.id] ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className={`w-full h-40 object-contain mb-2 rounded-md ${
+                        product.is_offered_product === 'yes' && product.discount_value ? 'mt-4' : ''
+                      }`}
+                      onError={() => handleImageError(product.id)}
+                    />
+                  ) : (
+                    <div
+                      className={`w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm ${
+                        product.is_offered_product === 'yes' && product.discount_value ? 'mt-4' : ''
+                      }`}
+                    >
+                      No image available
+                    </div>
+                  )}
+                </InertiaLink>
+                <div className="mt-auto">
+                  <InertiaLink href={`/product/${product.id}`}>
+                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                      {product.name}
+                    </h3>
+                  </InertiaLink>
+                  {product.is_offered_product === 'yes' && product.offer_price ? (
+                    <div className="flex flex-col items-center">
+                      <p className="text-gray-400 text-sm line-through tracking-wide">
+                        {parseFloat(product.price).toFixed(2)} Tk
+                      </p>
+                      <p className="text-lg font-bold text-red-600">
+                        {parseFloat(product.offer_price).toFixed(2)} Tk
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
+                  )}
+                </div>
+              </div>
             ))}
           </div>
         ) : (
@@ -227,8 +255,63 @@ function Home({ auth, images, categories, featuredProducts, specialOfferProducts
         <h1 className="text-3xl font-extrabold text-center mb-8 tracking-tight text-gray-900">Special Offers</h1>
         {specialOfferProducts && specialOfferProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
-            {prepareProducts(specialOfferProducts).map((product) => (
-              <ProductCard key={product.id} product={product} handleImageError={handleImageError} />
+            {specialOfferProducts.map((product, index) => (
+              <div
+                key={product.id || index}
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative group"
+              >
+                {product.is_special_offer === 'yes' && product.discount_value ? (
+                  <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                    Save {parseFloat(product.discount_value).toFixed(2)} Tk
+                  </span>
+                ) : (
+                  <div className="absolute top-2 left-2 animate-fire">
+                    <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
+                  </div>
+                )}
+                <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
+                  {product.image && !imageErrors[product.id] ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className={`w-full h-40 object-contain mb-2 rounded-md ${
+                        product.is_special_offer === 'yes' && product.discount_value ? 'mt-4' : ''
+                      }`}
+                      onError={() => handleImageError(product.id)}
+                    />
+                  ) : (
+                    <div
+                      className={`w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm ${
+                        product.is_special_offer === 'yes' && product.discount_value ? 'mt-4' : ''
+                      }`}
+                    >
+                      No image available
+                    </div>
+                  )}
+                </InertiaLink>
+                <div className="mt-auto">
+                  <InertiaLink href={`/product/${product.id}`}>
+                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                      {product.name}
+                    </h3>
+                  </InertiaLink>
+                  {product.is_special_offer === 'yes' && product.offer_price ? (
+                    <div className="flex flex-col items-center">
+                      <p className="text-gray-400 text-sm line-through tracking-wide">
+                        {parseFloat(product.price).toFixed(2)} Tk
+                      </p>
+                      <p className="text-lg font-bold text-red-600">
+                        {parseFloat(product.offer_price).toFixed(2)} Tk
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
+                  )}
+                </div>
+                <button className="mt-4 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 px-4 py-2 rounded-full ">
+                  Shop Now
+                </button>
+              </div>
             ))}
           </div>
         ) : (
@@ -239,8 +322,51 @@ function Home({ auth, images, categories, featuredProducts, specialOfferProducts
         <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">New Arrivals</h1>
         {newArrivalProducts && newArrivalProducts.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
-            {prepareProducts(newArrivalProducts, true).map((product) => (
-              <ProductCard key={product.id} product={product} handleImageError={handleImageError} />
+            {newArrivalProducts.map((product, index) => (
+              <div
+                key={product.id || index}
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative group"
+              >
+                <span className="absolute top-2 right-2 bg-gradient-to-r from-teal-400 to-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
+                  New Arrival
+                </span>
+                <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
+                  {product.image && !imageErrors[product.id] ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-40 object-contain mb-2 rounded-md mt-4"
+                      onError={() => handleImageError(product.id)}
+                    />
+                  ) : (
+                    <div className="w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm mt-4">
+                      No image available
+                    </div>
+                  )}
+                </InertiaLink>
+                <div className="mt-auto">
+                  <InertiaLink href={`/product/${product.id}`}>
+                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                      {product.name}
+                    </h3>
+                  </InertiaLink>
+                  {product.is_offered_product === 'yes' && product.offer_price ? (
+                    <div className="flex flex-col items-center">
+                      <p className="text-gray-400 text-sm line-through tracking-wide">
+                        {parseFloat(product.price).toFixed(2)} Tk
+                      </p>
+                      <p className="text-lg font-bold text-red-600">
+                        {parseFloat(product.offer_price).toFixed(2)} Tk
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
+                  )}
+                </div>
+                <button className="mt-4 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-purple-600 px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hover:from-teal-600 hover:to-purple-700">
+                  Shop Now
+                </button>
+              </div>
             ))}
           </div>
         ) : (

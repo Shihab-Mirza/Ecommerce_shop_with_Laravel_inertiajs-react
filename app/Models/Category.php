@@ -12,7 +12,7 @@ class Category extends Model
     use HasFactory;
 
     // Mass assignable fields
-    protected $fillable = ['name'];
+    protected $fillable = ['name' , 'icon' ,'show_category_icon'];
     public function subcategories()
     {
         return $this->hasMany(Subcategory::class);

@@ -180,7 +180,7 @@ const AddProduct = ({ auth, errors: initialErrors, flash, categories, subcategor
                 setSpecName14(''); setSpecDetail14('');
                 setSpecName15(''); setSpecDetail15('');
                 setValidationErrors({});
-                setSuccessMessage(page.props.flash || 'Product added successfully!');
+                setSuccessMessage(page.props.flash );
                 setIsProductsOpen(true);
                 setActiveLink('add_product');
             },

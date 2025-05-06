@@ -16,14 +16,14 @@ function SecondaryNavBar({ categories }) {
   const desktopCategories = categories?.slice(0, 14) || [];
 
   return (
-    <nav className="bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg py-2 top-0 z-50 border-b border-cyan-500/30 mt-[72px]">
+    <nav className="bg-gradient-to-r from-gray-900 to-gray-800 shadow-lg py-2  z-50 border-b border-cyan-500/30 mt-[72px] ">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Desktop and Mobile Toggle */}
         <div className="flex justify-between items-center">
           <div className="hidden lg:flex items-center">
             {desktopCategories.length ? (
               desktopCategories.map((category) => (
-                <div key={category.id} className="relative group pb-1">
+                <div key={category.id} className="relative group  pb-1">
                   <Link
                     href={route('products.by.category', category.id)}
                     className="flex items-center px-3 py-1 text-sm font-semibold text-gray-100 hover:text-cyan-400 transition-colors duration-300"

@@ -193,8 +193,8 @@ const AddSpecialOfferProduct = ({ auth, errors: initialErrors, flash, categories
                 setSpecName15('');
                 setSpecDetail15('');
                 setValidationErrors({});
-                setSuccessMessage(page.props.flash || 'Special offered product added successfully!');
-                setIsHomepageOpen(true); // Ensure Homepage menu stays open
+                setSuccessMessage(page.props.flash);
+                setIsHomepageOpen(true);
                 setActiveLink('add_special_offer_product');
             },
             onError: (errors) => {

@@ -1,17 +1,20 @@
 <?php
 
+use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SslCommerzPaymentController;
-
+use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\HomePageController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CategoryIconController;
 use App\Http\Controllers\SubcategoryController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\OfferController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -24,11 +27,11 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-    Route::get('/checkout1', [SslCommerzPaymentController::class, 'exampleEasyCheckout']);
-    Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
+Route::get('/checkout1', [SslCommerzPaymentController::class, 'exampleEasyCheckout']);
+Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
 
-    Route::post('/pay', [SslCommerzPaymentController::class, 'index']);
-    Route::post('/pay-via-ajax', [SslCommerzPaymentController::class, 'payViaAjax']);
+Route::post('/pay', [SslCommerzPaymentController::class, 'index']);
+Route::post('/pay-via-ajax', [SslCommerzPaymentController::class, 'payViaAjax']);
 
 Route::post('/success', [SslCommerzPaymentController::class, 'success']); // Matches success_url
 Route::post('/fail', [SslCommerzPaymentController::class, 'fail']);       // Matches failed_url
@@ -54,19 +57,17 @@ Route::get('/products/category/{id}', [HomeController::class, 'byCategory'])->na
 Route::get('/products/subcategory/{id}', [HomeController::class, 'bySubcategory'])->name('products.by.subcategory');
 Route::get('/products/brand/{id}', [HomeController::class, 'byBrand'])->name('products.by.brand');
 
-Route::get('/view-products/{id}', [HomeController::class, 'showProduct'])->name('products.view');
 Route::get('/product/{id}', [HomeController::class, 'view_full_Product'])->name('products.show');
 Route::post('/products/{productId}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+Route::post('/wishlist/add/{product}', [WishlistController::class, 'add'])->name('wishlist.add');
+Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
 
 
 
 
 
-Route::get('/dashboard', function () {
-    return Inertia::render('AdminDashboard/Dashboard', [
-        'activeLink' => 'dashboard',
-    ]);
-})->middleware(['auth', 'verified', 'admin'])->name('dashboard');
+Route::get('/dashboard', [HomePageController::class,'view_admin_dashboard'])->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
 
 
@@ -115,7 +116,7 @@ Route::post('/add_new_featured_product', [HomePageController::class, 'store']);
 Route::get('/view_featured_products', [HomePageController::class, 'feature_product_index'])->name('feature_product.index');
 Route::get('/feature_products/{id}/edit', [HomePageController::class, 'feature_product_edit'])->name('feature_product.edit');
 Route::put('/feature_products/{id}', [HomePageController::class, 'feature_product_update'])->name('feature_product.update');
-Route::delete('/feature_products/{id}', [HomePageController::class, 'feature_product_destroy'])->name('feature_product.destroy');
+Route::delete('/feature_products/{id}', [ProductController::class, 'destroy'])->name('feature_product.destroy');
 
 
 
@@ -136,7 +137,7 @@ Route::post('/add_new_special_offer_product', [HomePageController::class, 'speci
 Route::get('/view_special_offer_products', [HomePageController::class, 'special_offer_index']);
 Route::get('/special_offer_products/{id}/edit', [HomePageController::class, 'special_offer_edit']);
 Route::put('/special_offer_products/{id}', [HomePageController::class, 'special_offer_update']);
-Route::delete('/special_offer_products/{id}', [HomePageController::class, 'special_offer_destroy']);
+Route::delete('/special_offer_products/{id}', [ProductController::class, 'destroy']);
 
 
 Route::get('/manage_special_offer', [HomePageController::class, 'manage_special_offer_index'])->name('special_offers.index');
@@ -155,16 +156,35 @@ Route::delete('/assign_role/{id}', [UserManagementController::class, 'destroy'])
 Route::get('/add_offer', [OfferController::class, 'index'])->name('offers.index');
 Route::post('/offers/save', [OfferController::class, 'save'])->name('offers.save');
 
+
+
+
+
+Route::get('/view_orders', [OrderController::class, 'index'])->name('orders.index');
+Route::get('/orders/{orderId}/items', [OrderController::class, 'showOrderItems'])->name('orders.items');
+Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/manage_category_icons', [CategoryIconController::class, 'manageIcons'])->name('manage_category_icons');
+    Route::put('/categoriesIcon/{id}', [CategoryIconController::class, 'update'])->name('categories.update');
 });
 
 
 
 
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [UserProfileController::class, 'index'])->name('profile');
+
+    Route::patch('/profile', [UserProfileController::class, 'update'])->name('profile.update');
+    Route::post('/password', [UserProfileController::class, 'Passwordupdate'])->name('password.update');
+});;
+
+
 
 require __DIR__.'/auth.php';

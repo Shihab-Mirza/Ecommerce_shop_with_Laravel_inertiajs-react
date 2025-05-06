@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBars, faTimes, faSignInAlt, faUserPlus, faSearch, faSignOutAlt, faShoppingCart, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { Link, usePage } from '@inertiajs/react';
@@ -17,9 +17,15 @@ function Navbar({ auth }) {
     const [searchOpen, setSearchOpen] = useState(false);
     const [cartModalOpen, setCartModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-
-    // State to track if user attempted checkout while not logged in
     const [pendingCheckout, setPendingCheckout] = useState(false);
+
+    // Debug cart items on mount and when props change
+    useEffect(() => {
+        console.log('Cart Items:', props.cartItems);
+        console.log('Cart Count:', props.cartCount);
+        setCartItems(props.cartItems || []);
+        setCartCount(props.cartCount || 0);
+    }, [props.cartItems, props.cartCount]);
 
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
@@ -72,7 +78,13 @@ function Navbar({ auth }) {
             if (response.data.success) {
                 const updatedItems = cartItems.map((item) =>
                     item.id === itemId
-                        ? { ...item, quantity: parseInt(quantity), total_price: item.price * quantity }
+                        ? {
+                            ...item,
+                            quantity: parseInt(quantity),
+                            total_price: item.is_offered_product === 'yes' && item.offer_price
+                                ? item.offer_price * quantity
+                                : item.price * quantity
+                        }
                         : item
                 );
                 setCartItems(updatedItems);
@@ -105,17 +117,25 @@ function Navbar({ auth }) {
         }
     };
 
-    // Handle checkout click
     const handleCheckout = () => {
+        // Check if any cart item exceeds available stock
+        const outOfStockItems = cartItems.filter((item) => item.quantity > item.available_stock);
+        if (outOfStockItems.length > 0) {
+            const messages = outOfStockItems.map(
+                (item) => `${item.product_name}: ${item.quantity} requested, but only ${item.available_stock} available.`
+            );
+            alert(`Cannot proceed to checkout:\n${messages.join('\n')}`);
+            return;
+        }
+
         if (!auth.user) {
-            setPendingCheckout(true); // Set flag to redirect after login
-            setLoginModalOpen(true); // Open login modal
+            setPendingCheckout(true);
+            setLoginModalOpen(true);
         } else {
             Inertia.get(`/checkout2/${props.cartId}/${props.checkoutToken}`);
         }
     };
 
-    // Modified toggleLoginModal to handle post-login redirect
     const handleLoginSuccess = () => {
         setLoginModalOpen(false);
         if (pendingCheckout) {
@@ -123,6 +143,20 @@ function Navbar({ auth }) {
             Inertia.get(`/checkout2/${props.cartId}/${props.checkoutToken}`);
         }
     };
+
+    // Handle wishlist click
+    const handleWishlistClick = () => {
+        if (!auth.user) {
+            setLoginModalOpen(true);
+            setMenuOpen(false);
+            setCartModalOpen(false);
+        } else {
+            Inertia.get('/wishlist');
+        }
+    };
+
+    // Check if any cart item exceeds available stock to disable checkout button
+    const isCheckoutDisabled = cartItems.some((item) => item.quantity > item.available_stock);
 
     const authButtonStyles = "px-5 py-2 text-sm text-gray-100 font-medium tracking-wide uppercase rounded-full bg-gray-800/80 border border-gray-700/50 hover:bg-gray-700 hover:border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500/30 transition-all duration-300 flex items-center gap-2 shadow-sm";
 
@@ -155,9 +189,9 @@ function Navbar({ auth }) {
                                     {cartCount}
                                 </span>
                             </button>
-                            <Link href="/wishlist" className="p-2 text-gray-200 hover:text-white transition duration-300">
+                            <button onClick={handleWishlistClick} className="p-2 text-gray-200 hover:text-white transition duration-300">
                                 <FontAwesomeIcon icon={faHeart} size="lg" />
-                            </Link>
+                            </button>
                             {auth.user ? (
                                 <>
                                     <Link href="/profile" className={authButtonStyles}>
@@ -220,9 +254,9 @@ function Navbar({ auth }) {
                                     {cartCount}
                                 </span>
                             </button>
-                            <Link href="/wishlist" className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2">
+                            <button onClick={handleWishlistClick} className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2">
                                 <FontAwesomeIcon icon={faHeart} /> Wishlist
-                            </Link>
+                            </button>
                             {auth.user ? (
                                 <>
                                     <Link href="/profile" className={authButtonStyles}>
@@ -268,10 +302,30 @@ function Navbar({ auth }) {
                                 <div className="space-y-4">
                                     {cartItems.map((item) => (
                                         <div key={item.id} className="flex items-center gap-4 border-b pb-4">
-                                            <div className="w-16 h-16 bg-gray-200 rounded"></div>
+                                            {/* Product Image */}
+                                            {item.image_path ? (
+                                                <img
+                                                    src={`/storage/${item.image_path}`}
+                                                    alt={item.product_name || 'Product'}
+                                                    className="w-16 h-16 object-cover rounded border border-gray-200"
+                                                />
+                                            ) : (
+                                                <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+                                                    No Image
+                                                </div>
+                                            )}
                                             <div className="flex-1">
-                                                <h3 className="text-sm font-medium text-gray-900">{item.product_name}</h3>
-                                                <p className="text-sm text-gray-500">${item.price.toFixed(2)}</p>
+                                                <h3 className="text-sm font-medium text-gray-900">{item.product_name || 'Unknown Product'}</h3>
+                                                <div className="text-sm text-gray-500">
+                                                    {item.is_offered_product === 'yes' && item.offer_price !== null ? (
+                                                        <>
+                                                            <span className="text-green-600 font-semibold">Tk {item.offer_price.toFixed(2)}</span>
+                                                            <span className="line-through text-gray-400 ml-2">Tk {item.price.toFixed(2)}</span>
+                                                        </>
+                                                    ) : (
+                                                        <span>Tk {item.price ? item.price.toFixed(2) : '0.00'}</span>
+                                                    )}
+                                                </div>
                                                 <div className="flex items-center gap-2 mt-1">
                                                     <label className="text-sm text-gray-700">Qty:</label>
                                                     <input
@@ -281,8 +335,18 @@ function Navbar({ auth }) {
                                                         onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
                                                         className="w-16 border rounded px-2 py-1 text-sm"
                                                     />
+                                                    {item.quantity > item.available_stock && (
+                                                        <span className="text-red-500 text-xs">
+                                                            Quantity exceeds stock availability!
+                                                        </span>
+                                                    )}
                                                 </div>
-                                                <p className="text-sm text-gray-700 mt-1">Total: ${(item.price * item.quantity).toFixed(2)}</p>
+                                                <p className="text-sm text-gray-700 mt-1">
+                                                    Total: Tk
+                                                    {(item.is_offered_product === 'yes' && item.offer_price !== null
+                                                        ? item.offer_price * item.quantity
+                                                        : item.price * item.quantity).toFixed(2)}
+                                                </p>
                                             </div>
                                             <button
                                                 onClick={() => handleRemoveItem(item.id)}
@@ -295,14 +359,28 @@ function Navbar({ auth }) {
                                     <div className="mt-4">
                                         <div className="flex justify-between text-lg font-semibold">
                                             <span>Total:</span>
-                                            <span>${cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)}</span>
+                                            <span>
+                                                Tk
+                                                {cartItems
+                                                    .reduce((sum, item) =>
+                                                        sum + (item.is_offered_product === 'yes' && item.offer_price !== null
+                                                            ? item.offer_price * item.quantity
+                                                            : item.price * item.quantity), 0)
+                                                    .toFixed(2)}
+                                            </span>
                                         </div>
                                         <button
                                             onClick={handleCheckout}
-                                            className="w-full mt-4 px-4 py-2 bg-gray-800 text-white rounded-full text-center hover:bg-gray-700 transition duration-300"
+                                            className={`w-full mt-4 px-4 py-2 rounded-full text-center transition duration-300 ${
+                                                isCheckoutDisabled
+                                                    ? 'bg-gray-800 text-white cursor-not-allowed'
+                                                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                                            }`}
+                                            disabled={isCheckoutDisabled}
                                         >
                                             Proceed to Checkout
                                         </button>
+
                                     </div>
                                 </div>
                             )}

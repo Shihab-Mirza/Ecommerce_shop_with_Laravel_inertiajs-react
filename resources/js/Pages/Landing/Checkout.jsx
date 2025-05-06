@@ -30,10 +30,34 @@ function Checkout({ auth, categories, cartItems, checkoutToken, cartId, total })
                                 {cartItems.map((item) => (
                                     <div key={item.id} className="flex items-center justify-between border-b pb-4">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-16 h-16 bg-gray-200 rounded"></div>
+                                            {/* Show product image if available, otherwise show placeholder */}
+                                            {item.product_image ? (
+                                                <img
+                                                    src={item.product_image}
+                                                    alt={item.product_name}
+                                                    className="w-16 h-16 object-cover rounded"
+                                                />
+                                            ) : (
+                                                <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center">
+                                                    <span className="text-xs text-gray-500">No image</span>
+                                                </div>
+                                            )}
                                             <div>
                                                 <h3 className="text-sm font-medium text-gray-900">{item.product_name}</h3>
-                                                <p className="text-sm text-gray-500">Price: ${item.price.toFixed(2)}</p>
+                                                {item.is_offered_product === 'yes' && item.offer_price ? (
+                                                    <div>
+                                                        <p className="text-sm text-gray-500 line-through">
+                                                            Regular: ${item.price.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-sm text-green-600 font-medium">
+                                                            Offer: ${item.offer_price.toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-sm text-gray-500">
+                                                        Price: ${item.price.toFixed(2)}
+                                                    </p>
+                                                )}
                                                 <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
                                             </div>
                                         </div>

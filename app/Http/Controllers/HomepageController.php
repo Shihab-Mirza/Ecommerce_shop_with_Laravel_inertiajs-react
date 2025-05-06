@@ -10,9 +10,30 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Brand;
+use App\Models\User;
 use App\Models\Offer;
+use App\Models\Order;
 class HomepageController extends Controller
 {
+    public function view_admin_dashboard() {
+        $userCount = User::where('usertype', 'user')->count();
+        $brandCount = Brand::count();
+        $orderCount = Order::whereIn('status', ['processing', 'completed'])->count();
+        $pendingOrderCount = Order::where('status', 'pending')->count();
+        $productCount = Product::count();
+        $totalSales = Order::sum('amount');
+
+        return Inertia::render('AdminDashboard/Dashboard', [
+            'activeLink' => 'dashboard',
+            'userCount' => $userCount,
+            'brandCount' => $brandCount,
+            'orderCount' => $orderCount,
+            'pendingOrderCount' => $pendingOrderCount,
+            'productCount' => $productCount,
+            'totalSales' => $totalSales,
+        ]);
+    }
+
     public function index()
     {
         $images = Homepage::all();
@@ -532,7 +553,6 @@ class HomepageController extends Controller
         // Create the product
         $product = Product::create($productData);
 
-        // Return a response with a flash message
         return redirect()->back()
             ->with('success', 'Special offer Product for Homepage added successfully!');
     }

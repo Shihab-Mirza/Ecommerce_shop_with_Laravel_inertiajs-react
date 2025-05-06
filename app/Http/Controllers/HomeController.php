@@ -17,6 +17,7 @@ use Carbon\Carbon;
 
 class HomeController extends Controller
 {
+
     public function index()
     {
         // Fetch slideshow images
@@ -27,8 +28,30 @@ class HomeController extends Controller
             ];
         })->toArray();
 
-        // Fetch categories with subcategories and brands
-        $categories = Category::with(['subcategories.brands'])->get()->toArray();
+        // Fetch categories with subcategories, brands, and icon details
+        $categories = Category::with(['subcategories.brands'])
+            ->select('id', 'name', 'icon', 'show_category_icon')
+            ->get()
+            ->map(function ($category) {
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'icon' => $category->icon,
+                    'show_category_icon' => $category->show_category_icon,
+                    'subcategories' => $category->subcategories->map(function ($subcategory) {
+                        return [
+                            'id' => $subcategory->id,
+                            'name' => $subcategory->name,
+                            'brands' => $subcategory->brands->map(function ($brand) {
+                                return [
+                                    'id' => $brand->id,
+                                    'name' => $brand->name,
+                                ];
+                            })->toArray(),
+                        ];
+                    })->toArray(),
+                ];
+            })->toArray();
 
         // Fetch featured products with offer details and image
         $featuredProducts = Product::where('is_featured', 'yes')
@@ -36,7 +59,7 @@ class HomeController extends Controller
                 $query->where('is_active', 'yes');
             }])
             ->select('id', 'name', 'price', 'is_offered_product', 'image')
-            ->take(25) // Limit to 25 for 5x5 grid
+            ->take(25)
             ->get()
             ->map(function ($product) {
                 return [
@@ -56,7 +79,7 @@ class HomeController extends Controller
                 $query->where('is_active', 'yes');
             }])
             ->select('id', 'name', 'price', 'is_special_offer', 'image')
-            ->take(25) // Limit to 25 for 5x5 grid
+            ->take(25)
             ->get()
             ->map(function ($product) {
                 return [
@@ -70,14 +93,15 @@ class HomeController extends Controller
                 ];
             })->toArray();
 
+        // Fetch new arrival products with offer details and image
         $newArrivalProducts = Product::where('is_featured', 'no')
             ->where('is_special_offer', 'no')
             ->with(['offer' => function ($query) {
                 $query->where('is_active', 'yes');
             }])
             ->select('id', 'name', 'price', 'is_offered_product', 'image')
-            ->orderBy('id', 'desc') // Latest products by ID
-            ->take(25) // Limit to 25 for 5x5 grid
+            ->orderBy('id', 'desc')
+            ->take(25)
             ->get()
             ->map(function ($product) {
                 return [
@@ -95,7 +119,7 @@ class HomeController extends Controller
                 'user' => Auth::user(),
             ],
             'images' => $images,
-            'categories' => $categories,
+            'category' => $categories,
             'featuredProducts' => $featuredProducts,
             'specialOfferProducts' => $specialOfferProducts,
             'newArrivalProducts' => $newArrivalProducts,
@@ -259,23 +283,21 @@ class HomeController extends Controller
             'categories' => $categories,
         ]);
     }
+
+
     public function view_full_Product($id)
     {
-
-
         $product = Product::with([
-            'category',
-            'subcategory',
-            'brand',
+            'category:id,name',
+            'subcategory:id,category_id,sub_category_name',
+            'brand:id,brand_name',
             'offer',
-            'reviews.user' // Load reviews with user details
+            'reviews.user:id,name'
         ])->findOrFail($id);
-        $categories = Category::with('subcategories')->get();
 
         return Inertia::render('Landing/ShowProduct', [
             'product' => $product,
-            'categories' => $categories,
-
+            'flash' => session('flash'),
         ]);
     }
 

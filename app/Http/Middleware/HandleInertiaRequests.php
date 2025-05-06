@@ -6,110 +6,73 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Models\Category;
 use App\Models\Cart;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class HandleInertiaRequests extends Middleware
 {
-    /**
-     * The root template that is loaded on the first page visit.
-     *
-     * @var string
-     */
     protected $rootView = 'app';
 
-    /**
-     * Determine the current asset version.
-     */
     public function version(Request $request): ?string
     {
         return parent::version($request);
     }
 
-    /**
-     * Define the props that are shared by default.
-     *
-     * @return array<string, mixed>
-     */
     public function share(Request $request): array
     {
-        // Fetch categories with subcategories and brands, cached for 1 hour
-        $categories = Cache::remember('categories_with_subcategories_brands', 60 * 60, function () {
-            return Category::with(['subcategories.brands'])->get();
-        });
+        // Fetch categories with subcategories and brands without caching
+        $categories = Category::with(['subcategories.brands'])->get();
 
-        // Initialize cart count, cart items, checkout token, and cart ID
+        // Initialize cart data
         $cartCount = 0;
         $cartItems = [];
         $checkoutToken = null;
         $cartId = null;
 
         try {
+            $cart = null;
             if ($request->user()) {
                 // For logged-in users, fetch cart by user_id
                 $cart = Cart::where('user_id', $request->user()->id)->first();
-                if ($cart) {
-                    $cartCount = $cart->items()->distinct('product_id')->count('product_id');
-                    $cartItems = $cart->items()
-                        ->with(['product' => function ($query) {
-                            $query->select('id', 'name', 'price');
-                        }])
-                        ->get()
-                        ->map(function ($item) {
-                            $product = $item->product;
-                            return [
-                                'id' => $item->id,
-                                'product_id' => $item->product_id,
-                                'product_name' => $product ? $product->name : 'Unknown Product',
-                                'quantity' => $item->quantity,
-                                'price' => $product ? (float)$product->price : 0.0,
-                                'total_price' => $product ? (float)$product->price * $item->quantity : 0.0,
-                            ];
-                        })->toArray();
-                    $checkoutToken = $cart->checkout_token;
-                    $cartId = $cart->id;
-                }
             } else {
                 // For guest users, fetch cart by session_id
                 $sessionId = $request->session()->getId();
                 $cart = Cart::where('session_id', $sessionId)->first();
-                if ($cart) {
-                    $cartCount = $cart->items()->distinct('product_id')->count('product_id');
-                    $cartItems = $cart->items()
-                        ->with(['product' => function ($query) {
-                            $query->select('id', 'name', 'price');
-                        }])
-                        ->get()
-                        ->map(function ($item) {
-                            $product = $item->product;
-                            return [
-                                'id' => $item->id,
-                                'product_id' => $item->product_id,
-                                'product_name' => $product ? $product->name : 'Unknown Product',
-                                'quantity' => $item->quantity,
-                                'price' => $product ? (float)$product->price : 0.0,
-                                'total_price' => $product ? (float)$product->price * $item->quantity : 0.0,
-                            ];
-                        })->toArray();
-                    $checkoutToken = $cart->checkout_token;
-                    $cartId = $cart->id;
-                }
             }
 
-            // Log the cart data for debugging
-            Log::debug('Cart data for request', [
-                'user_id' => $request->user() ? $request->user()->id : null,
-                'session_id' => $request->session()->getId(),
-                'cart_count' => $cartCount,
-                'cart_items' => $cartItems,
-                'checkout_token' => $checkoutToken,
-                'cart_id' => $cartId,
-            ]);
+            if ($cart) {
+                $cartCount = $cart->items()->distinct('product_id')->count('product_id');
+                $cartItems = $cart->items()
+                    ->with(['product' => function ($query) {
+                        $query->select('id', 'name', 'price', 'is_offered_product', 'image', 'quantity')
+                            ->with(['offer' => function ($query) {
+                                $query->select('offer_id', 'product_id', 'offer_price');
+                            }]);
+                    }])
+                    ->get()
+                    ->map(function ($item) {
+                        $product = $item->product;
+                        $offer = $product->offer ?? null;
+                        return [
+                            'id' => $item->id,
+                            'product_id' => $item->product_id,
+                            'product_name' => $product ? $product->name : 'Unknown Product',
+                            'quantity' => $item->quantity, // Cart item quantity
+                            'available_stock' => $product ? (int)$product->quantity : 0, // Product stock from products table
+                            'price' => $product ? (float)$product->price : 0.0,
+                            'offer_price' => $product && $product->is_offered_product === 'yes' ? (float)$offer->offer_price : null,
+                            'is_offered_product' => $product ? $product->is_offered_product : 'no',
+                            'image_path' => $product ? $product->image : null,
+                            'total_price' => $product ? (
+                                $product && $product->is_offered_product === 'yes' && $offer->offer_price
+                                    ? (float)$offer->offer_price * $item->quantity
+                                    : (float)$product->price * $item->quantity
+                            ) : 0.0,
+                        ];
+                    })->toArray();
+                $checkoutToken = $cart->checkout_token;
+                $cartId = $cart->id;
+            }
         } catch (\Exception $e) {
-            Log::error('Error in HandleInertiaRequests middleware', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            // Silently handle the exception without logging
         }
 
         return [

@@ -65,9 +65,7 @@ class Product extends Model
 
     public function subcategory()
     {
-        return $this->belongsTo(SubCategory::class);
-    }
-
+        return $this->belongsTo(Subcategory::class); }
 
     public function brand()
     {
@@ -78,7 +76,7 @@ class Product extends Model
 
     public function offer()
     {
-        return $this->hasOne(Offer::class, 'product_id');
+        return $this->hasOne(Offer::class, 'product_id', 'id');
     }
 
 

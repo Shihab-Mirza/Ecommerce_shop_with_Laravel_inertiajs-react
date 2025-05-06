@@ -18,6 +18,9 @@ return new class extends Migration
             $table->id();
             $table->string('sub_category_name');
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->string('icon')->nullable();
+            $table->string('show_sub_category_icon')->default('no');
+
             $table->timestamps();
         });
     }

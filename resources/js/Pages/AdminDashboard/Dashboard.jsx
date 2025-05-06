@@ -7,7 +7,7 @@ import AdminSidebar from './AdminSidebar';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const Dashboard = ({ auth }) => {
+const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount, productCount, totalSales }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -96,12 +96,12 @@ const Dashboard = ({ auth }) => {
     };
 
     const dashboardCards = [
-        { title: "Total Sales", value: "12,345 tk", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Orders", value: "87", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Products", value: "245", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Customers", value: "1,234", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Brands", value: "32", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Pending Orders", value: "12", gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Total Sales", value: `${totalSales} tk`, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Orders", value: orderCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Products", value: productCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Customers", value: userCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Brands", value: brandCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Pending Orders", value: pendingOrderCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
     ];
 
     return (

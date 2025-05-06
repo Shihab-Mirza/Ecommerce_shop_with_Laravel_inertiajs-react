@@ -1,118 +1,38 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faPaperPlane, faShoppingCart, faPlus, faMinus, faCheckCircle, faExclamationCircle, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faPaperPlane, faShoppingCart, faPlus, faMinus, faCheckCircle, faExclamationCircle, faHome ,faHeart } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavBar from './Navbar';
 import Footer from './Footer';
 import SecondaryNavBar from './SecondaryNavBar';
 import LoginModal from './LoginModal';
 import RegistrationModal from './RegistrationModal';
+import { Inertia } from '@inertiajs/inertia'
 
-const CartSuccessModal = ({ isOpen, closeModal }) => {
+const Toast = ({ message, type, onClose }) => {
     useEffect(() => {
-        if (isOpen) {
-            console.log('CartSuccessModal is open');
-            const timer = setTimeout(() => {
-                closeModal();
-            }, 3000); // Auto-close after 3 seconds
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, closeModal]);
-
-    if (!isOpen) return null;
+        const timer = setTimeout(() => {
+            onClose();
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
 
     return (
         <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ duration: 0.3 }}
+            className={`fixed top-4 right-4 max-w-sm w-full p-4 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
+                type === 'success' ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800'
+            } border-l-4`}
         >
-            <motion.div
-                initial={{ scale: 0.8, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.8, y: 20 }}
-                className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl"
-            >
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Success</h3>
-                    <motion.button
-                        onClick={closeModal}
-                        className="text-gray-500 hover:text-gray-700"
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                    >
-                        <FontAwesomeIcon icon={faTimes} />
-                    </motion.button>
-                </div>
-                <div className="flex items-center mb-4">
-                    <FontAwesomeIcon icon={faCheckCircle} className="text-green-500 text-2xl mr-3" />
-                    <p className="text-gray-700">Product added to cart successfully!</p>
-                </div>
-                <motion.button
-                    onClick={closeModal}
-                    className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    Close
-                </motion.button>
-            </motion.div>
-        </motion.div>
-    );
-};
-
-const CartErrorModal = ({ isOpen, closeModal, errorMessage }) => {
-    useEffect(() => {
-        if (isOpen) {
-            console.log('CartErrorModal is open with message:', errorMessage);
-            const timer = setTimeout(() => {
-                closeModal();
-            }, 3000); // Auto-close after 3 seconds
-            return () => clearTimeout(timer);
-        }
-    }, [isOpen, closeModal, errorMessage]);
-
-    if (!isOpen) return null;
-
-    return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 border-2 border-red-500"
-        >
-            <motion.div
-                initial={{ scale: 0.8, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.8, y: 20 }}
-                className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl"
-            >
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Error</h3>
-                    <motion.button
-                        onClick={closeModal}
-                        className="text-gray-500 hover:text-gray-700"
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                    >
-                        <FontAwesomeIcon icon={faTimes} />
-                    </motion.button>
-                </div>
-                <div className="flex items-center mb-4">
-                    <FontAwesomeIcon icon={faExclamationCircle} className="text-red-500 text-2xl mr-3" />
-                    <p className="text-gray-700">{errorMessage || 'Failed to add product to cart.'}</p>
-                </div>
-                <motion.button
-                    onClick={closeModal}
-                    className="w-full bg-red-600 text-white py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                >
-                    Close
-                </motion.button>
-            </motion.div>
+            <FontAwesomeIcon
+                icon={type === 'success' ? faCheckCircle : faExclamationCircle}
+                className={`text-xl ${type === 'success' ? 'text-green-500' : 'text-red-500'}`}
+            />
+            <p className="text-sm font-medium">{message}</p>
         </motion.div>
     );
 };
@@ -127,27 +47,40 @@ export default function ShowProduct({ auth, product, categories }) {
     const [activeTab, setActiveTab] = useState('specifications');
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
-    const [showCartSuccessModal, setShowCartSuccessModal] = useState(false);
-    const [showCartErrorModal, setShowCartErrorModal] = useState(false);
-    const [cartErrorMessage, setCartErrorMessage] = useState('');
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
     const { post: postReview, processing: reviewProcessing, errors: reviewErrors, setData } = useForm({
         rating: 0,
         comment: '',
     });
+    const { post: postWishlist, processing: wishlistProcessing } = useForm({});
     const { flash } = usePage().props;
 
-    // Debug: Log flash messages and handle modal triggers
     useEffect(() => {
-        console.log('Current flash messages:', flash);
-        if (flash?.success) {
-            console.log('Flash success detected:', flash.success);
-            setShowCartSuccessModal(true);
-        }
+        setToast({ show: false, message: '', type: '' });
+
         if (flash?.error) {
-            console.log('Flash error detected:', flash.error);
-            setCartErrorMessage(flash.error);
-            setShowCartErrorModal(true);
+            setToast({
+                show: true,
+                message: flash.error,
+                type: 'error',
+            });
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else if (flash?.success) {
+            setToast({
+                show: true,
+                message: flash.success,
+                type: 'success',
+            });
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
         }
+
+        return () => {
+            setToast({ show: false, message: '', type: '' });
+        };
     }, [flash?.success, flash?.error]);
 
     const descriptionRef = useRef(null);
@@ -169,44 +102,57 @@ export default function ShowProduct({ auth, product, categories }) {
 
     const handleAddToCart = () => {
         if (!quantity || quantity < 1) {
-            console.log('Invalid quantity:', quantity);
-            setCartErrorMessage('Please select a valid quantity.');
-            setShowCartErrorModal(true);
+            setToast({
+                show: true,
+                message: 'Please select a valid quantity.',
+                type: 'error',
+            });
             return;
         }
 
         setCartData('quantity', quantity);
 
-        console.log('Sending cart add request with quantity:', quantity);
-
         post(route('cart.add', product.id), {
             preserveScroll: true,
+            preserveState: true,
             onSuccess: () => {
-                console.log('Cart add success, triggering full reload');
-                setShowCartSuccessModal(true);
                 setQuantity(1);
                 setCartData('quantity', 1);
-                window.location.reload(); // Trigger full page reload
             },
             onError: (errors) => {
-                console.log('Cart add error:', errors);
                 const errorMessage = errors.quantity || errors.message || flash?.error || 'Failed to add product to cart.';
-                console.log('Setting error modal with message:', errorMessage);
-                setCartErrorMessage(errorMessage);
-                setShowCartErrorModal(true);
+                setToast({
+                    show: true,
+                    message: errorMessage,
+                    type: 'error',
+                });
             },
         });
     };
 
-    const closeCartSuccessModal = () => {
-        console.log('Closing cart success modal');
-        setShowCartSuccessModal(false);
+    const handleAddToWishlist = () => {
+        if (!auth?.user) {
+            setIsLoginModalOpen(true);
+            return;
+        }
+
+        postWishlist(route('wishlist.add', product.id), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {},
+            onError: (errors) => {
+                const errorMessage = errors.message || flash?.error || 'Failed to add product to wishlist.';
+                setToast({
+                    show: true,
+                    message: errorMessage,
+                    type: 'error',
+                });
+            },
+        });
     };
 
-    const closeCartErrorModal = () => {
-        console.log('Closing cart error modal');
-        setShowCartErrorModal(false);
-        setCartErrorMessage('');
+    const closeToast = () => {
+        setToast({ show: false, message: '', type: '' });
     };
 
     const increaseQuantity = () => {
@@ -296,19 +242,63 @@ export default function ShowProduct({ auth, product, categories }) {
             <Head title={product.name} />
             <NavBar auth={auth} />
             <SecondaryNavBar categories={categories} />
-            <div className="min-h-screen bg-white py-2 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen bg-gray-100 py-2 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="my-2">
-                        <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 w-full">
-                            <h1 className="text-lg font-bold text-left mb-0">Products</h1>
+                    {/* Breadcrumb Navigation */}
+                    <div className="mb-1">
+                        <div className="bg-white shadow-lg  border border-gray-200 p-4 w-full">
+                            <nav className="flex items-center text-sm text-gray-600" aria-label="Breadcrumb">
+                                <Link
+                                    href={route('home')}
+                                    className="flex items-center hover:text-indigo-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faHome} className="mr-2" />
+                                    Home
+                                </Link>
+                                <span className="mx-2">/</span>
+                                {product.category && product.category.id && product.category.name && (
+                                    <>
+                                        <Link
+                                            href={route('products.by.category', product.category.id)}
+                                            className="hover:text-indigo-600 transition-colors duration-200"
+                                        >
+                                            {product.category.name}
+                                        </Link>
+                                        <span className="mx-2">/</span>
+                                    </>
+                                )}
+                                {product.subcategory && product.subcategory.id && product.subcategory.sub_category_name && (
+                                    <>
+                                        <Link
+                                            href={route('products.by.subcategory', product.subcategory.id)}
+                                            className="hover:text-indigo-600 transition-colors duration-200"
+                                        >
+                                            {product.subcategory.sub_category_name}
+                                        </Link>
+                                        <span className="mx-2">/</span>
+                                    </>
+                                )}
+                                {product.brand && product.brand.id && product.brand.brand_name && (
+                                    <>
+                                        <Link
+                                            href={route('products.by.brand', product.brand.id)}
+                                            className="hover:text-indigo-600 transition-colors duration-200"
+                                        >
+                                            {product.brand.brand_name}
+                                        </Link>
+                                        <span className="mx-2">/</span>
+                                    </>
+                                )}
+                                <span className="text-gray-900 font-medium">{product.name}</span>
+                            </nav>
                         </div>
                     </div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
+                        animate={{ opacity: 1, y: 20 }}
                         transition={{ duration: 0.6 }}
-                        className="bg-white rounded-2xl shadow-xl overflow-hidden"
+                        className="bg-white shadow-md overflow-hidden"
                     >
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 lg:p-10">
                             <div className="relative flex justify-center items-center">
@@ -329,21 +319,37 @@ export default function ShowProduct({ auth, product, categories }) {
 
                             <div className="flex flex-col justify-between">
                                 <div>
-                                    <h1 className="text-[25px] sm:text-[25px] font-extrabold text-gray-900 mb-4">{product.name}</h1>
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h1 className="text-[25px] sm:text-[25px] font-sans text-indigo-500">{product.name}</h1>
+                                        <motion.button
+    onClick={handleAddToWishlist}
+    disabled={wishlistProcessing}
+    className={`px-4 py-2 rounded-lg text-sm font-semibold text-black ${
+        wishlistProcessing
+            ? 'bg-white cursor-not-allowed'
+            : 'bg-gray-100'
+    } transition-colors duration-200 flex items-center gap-2`}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+>
+    <FontAwesomeIcon icon={faHeart} className="mr-2" />
+    Add to Wishlist
+</motion.button>
+                                    </div>
 
                                     <div className="mb-4">
                                         {product.is_offered_product === 'yes' && product.offer ? (
                                             <div className="flex items-center gap-3">
-                                                <span className="text-[20px] sm:text-[20px] font-bold text-red-600">
+                                                <span className="text-[15px] sm:text-[15px] font-bold text-red-600">
                                                     {parseFloat(product.offer.offer_price).toFixed(2)} Tk
                                                 </span>
                                                 <span className="text-sm text-gray-400 line-through">
-                                                    {parseFloat(product.price).toFixed(2)} Tk
+                                                   Price: {parseFloat(product.price).toFixed(2)} Tk
                                                 </span>
                                             </div>
                                         ) : (
-                                            <span className="text-sm sm:text-3xl font-bold text-gray-900">
-                                                {parseFloat(product.price).toFixed(2)} Tk
+                                            <span className="text-[25px] sm:text-[20px] font-bold text-gray-900">
+                                               {parseFloat(product.price).toFixed(2)} Tk
                                             </span>
                                         )}
                                     </div>
@@ -362,7 +368,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                         )}
                                     </div>
 
-                                    <div className="mb-6 text-sm">
+                                    <div className="mb-6 text-[15px]">
                                         <p className="text-gray-600">
                                             <span className="font-medium">Product Code:</span> {product.product_code}
                                         </p>
@@ -379,8 +385,8 @@ export default function ShowProduct({ auth, product, categories }) {
                                                     const detail = product[`spec_detail_${i + 1}`];
                                                     if (name && detail) {
                                                         return (
-                                                            <li key={i} className="text-sm">
-                                                                <span className="font-medium">{name}:</span> {detail}
+                                                            <li key={i} className="text-sm mt-2">
+                                                                <span className="font-medium ">{name}:</span> {detail}
                                                             </li>
                                                         );
                                                     }
@@ -393,7 +399,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                     <div className="flex items-center gap-4 mb-6">
                                         <div className="flex items-center">
                                             <span className="mr-3 text-gray-700 font-medium text-sm">Quantity:</span>
-                                            <div className="flex items-center border border-gray-200 rounded-lg">
+                                            <div className="flex items-center  border border-gray-200 rounded-lg">
                                                 <motion.button
                                                     onClick={decreaseQuantity}
                                                     disabled={quantity <= 1}
@@ -469,13 +475,13 @@ export default function ShowProduct({ auth, product, categories }) {
 
                                 <div className="p-6">
                                     {activeTab === 'specifications' && (
-                                        <div className="backdrop-blur-md bg-white/30 rounded-xl shadow-lg border border-white/20 overflow-hidden">
+                                        <div className="backdrop-blur-md bg-white/30   border border-white/20 overflow-hidden">
                                             <div className="overflow-x-auto">
                                                 <table className="w-full text-sm text-left">
                                                     <thead>
                                                         <tr className="bg-white text-black">
-                                                            <th className="w-1/3 px-8 py-3 font-semibold rounded-tl-xl">Specification</th>
-                                                            <th className="w-2/3 px-8 py-3 font-semibold rounded-tr-xl">Details</th>
+                                                            <th className="w-1/3 px-8 py-3 font-semibold ">Specification</th>
+                                                            <th className="w-2/3 px-8 py-3 font-semibold ">Details</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -486,11 +492,11 @@ export default function ShowProduct({ auth, product, categories }) {
                                                                 return (
                                                                     <tr
                                                                         key={i}
-                                                                        className="border-b border-gray-200/50 hover:bg-gray-50/50 transition-colors duration-200"
+                                                                        className="border-b border-gray-300/50 hover:bg-gray-50/50 transition-colors duration-200"
                                                                     >
                                                                         <td className="px-8 py-4 font-medium text-gray-800">{name}</td>
                                                                         <td className="px-8 py-4 text-gray-600">{detail}</td>
-                                                                    </tr>
+                                                                    </tr >
                                                                 );
                                                             }
                                                             return null;
@@ -501,15 +507,15 @@ export default function ShowProduct({ auth, product, categories }) {
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </div >
                         )}
                     </motion.div>
-
+<div ref={descriptionRef}></div>
                     <div
-                        ref={descriptionRef}
-                        className="bg-white rounded-2xl shadow-xl overflow-hidden mt-2"
+
+                        className="bg-white  shadow-md overflow-hidden mt-7"
                     >
-                        <div className="border-t border-gray-200">
+                        <div   className="border-t border-gray-200">
                             <div className="flex border-b border-gray-200">
                                 <div className="px-6 py-3 text-sm font-medium border-b-2 border-indigo-600 text-indigo-600">
                                     Description
@@ -525,7 +531,7 @@ export default function ShowProduct({ auth, product, categories }) {
 
                     <div
                         ref={reviewsRef}
-                        className="bg-white rounded-2xl shadow-xl overflow-hidden mt-2"
+                        className="bg-white  shadow-md overflow-hidden mt-2"
                     >
                         <div className="border-t border-gray-200">
                             <div className="flex border-b border-gray-200">
@@ -635,7 +641,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                         <motion.button
                                             type="submit"
                                             disabled={reviewProcessing || reviewRating === 0}
-                                            className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-lg disabled:opacity-60 "
+                                            className="flex items-center gap-2 px-6 py-3 rounded-lg text-white font-semibold text-sm transition-all duration-300 bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-lg disabled:opacity-60"
                                             whileHover={{ scale: 1.05, boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)' }}
                                             whileTap={{ scale: 0.95 }}
                                         >
@@ -677,17 +683,11 @@ export default function ShowProduct({ auth, product, categories }) {
             </AnimatePresence>
 
             <AnimatePresence>
-                {showCartSuccessModal && (
-                    <CartSuccessModal isOpen={showCartSuccessModal} closeModal={closeCartSuccessModal} />
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {showCartErrorModal && (
-                    <CartErrorModal
-                        isOpen={showCartErrorModal}
-                        closeModal={closeCartErrorModal}
-                        errorMessage={cartErrorMessage}
+                {toast.show && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={closeToast}
                     />
                 )}
             </AnimatePresence>

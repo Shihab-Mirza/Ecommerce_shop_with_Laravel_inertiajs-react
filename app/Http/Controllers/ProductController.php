@@ -243,7 +243,7 @@ class ProductController extends Controller
             return back()->withErrors(['is_special_offer' => 'Special offer cannot be yes if featured is yes.']);
         }
 
-  
+
 
         $imagePath = $product->image;
         if ($request->hasFile('image')) {

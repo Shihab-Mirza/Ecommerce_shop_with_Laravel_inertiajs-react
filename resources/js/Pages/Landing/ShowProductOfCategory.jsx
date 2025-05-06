@@ -142,7 +142,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
                     </div>
                   )}
                   {/* Product Image as Link */}
-                  <Link href={`/view-products/${product.id}`}>
+                  <Link href={route('products.show', product.id)}>
                     {product.image ? (
                       <img
                         src={asset('storage/' + product.image)}
@@ -159,7 +159,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
                     {/* Product Name as Link */}
                     <h3 className="text-sm font-semibold mb-2">
                       <Link
-                        href={`/view-products/${product.id}`}
+                        href={route('products.show', product.id)}
                         className="text-blue-600 hover:underline"
                       >
                         {product.name}
@@ -202,7 +202,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
   );
 }
 
-// Helper function to generate asset URLs (you may already have this)
+// Helper function to generate asset URLs
 function asset(path) {
   return `/${path}`;
 }

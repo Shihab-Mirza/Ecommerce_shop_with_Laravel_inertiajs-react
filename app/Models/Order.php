@@ -10,6 +10,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_id',
+        'user_id',
         'name',
         'email',
         'phone',
@@ -19,8 +20,14 @@ class Order extends Model
         'transaction_id',
         'currency',
     ];
-    public $timestamps = false; // Disable automatic timestamps
+    public $timestamps = false;
     protected $casts = [
         'amount' => 'double',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

@@ -13,7 +13,7 @@ class Subcategory extends Model
 
     // Mass assignable fields
     protected $fillable = ['sub_category_name',
-'category_id'];
+'category_id' , 'icon' ,'show_sub_category_icon'];
 
     // Relationships
     public function products()
