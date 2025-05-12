@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Userpoint;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,12 +38,20 @@ class RegisteredUserController extends Controller
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+
         $sessionId = Session::getId();
         $guestCart = $this->updateGuestCartToUserCart($sessionId);
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+
+        // Create a Userpoint record for the new user with default user_point of 0
+        Userpoint::create([
+            'user_id' => $user->id,
+            'user_point' => 0,
         ]);
 
         event(new Registered($user));
@@ -50,10 +59,13 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $userid = Auth::id();
         $this->updateuseridGuestCartToUserCart($userid, $guestCart);
+
         return redirect(route('home', absolute: false));
     }
 
-
+    /**
+     * Update guest cart to user cart by clearing session_id.
+     */
     protected function updateGuestCartToUserCart($sessionId): ?array
     {
         // Find the guest cart based on session_id
@@ -84,5 +96,4 @@ class RegisteredUserController extends Controller
             ]);
         }
     }
-
 }

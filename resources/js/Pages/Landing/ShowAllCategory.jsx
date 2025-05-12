@@ -2,7 +2,6 @@ import { Head, Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import SecondaryNavBar from './SecondaryNavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLayerGroup, faCube, faSearch } from '@fortawesome/free-solid-svg-icons';
 
@@ -31,8 +30,7 @@ export default function ShowAllCategory({ auth, categories }) {
   return (
     <>
       <Head title="All Categories" />
-      <NavBar auth={auth} />
-      <SecondaryNavBar categories={categories} />
+      <NavBar auth={auth} categories={categories} />
       <div className="container mx-auto px-4 py-12 bg-white min-h-screen">
         {/* Search Input */}
         <div className="mb-8">
@@ -82,7 +80,7 @@ export default function ShowAllCategory({ auth, categories }) {
                       .map((subcategory) => (
                         <div key={subcategory.id} className="ml-4 mb-4">
                           <h4 className="text-base font-medium text-gray-600 flex items-center">
-                          
+
                             <Link
                               href={route('products.by.subcategory', subcategory.id)}
                               className="hover:underline text-black"

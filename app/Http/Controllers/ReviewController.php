@@ -28,4 +28,7 @@ class ReviewController extends Controller
 
         return redirect()->route('products.show', $productId)->with('success', 'Review submitted successfully!');
     }
+
+
+    
 }

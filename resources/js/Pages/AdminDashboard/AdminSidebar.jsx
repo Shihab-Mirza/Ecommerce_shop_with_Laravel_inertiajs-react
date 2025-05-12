@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser, faTag, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
+import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser, faTag, faShoppingCart, faGift, faStar } from '@fortawesome/free-solid-svg-icons';
 
 const AdminSidebar = ({
     isSidebarMinimized,
@@ -42,8 +42,13 @@ const AdminSidebar = ({
     });
     const [isOrdersOpen, setIsOrdersOpen] = useState(() => {
         const savedState = localStorage.getItem('isOrdersOpen');
-        const isOrdersActive = ['view_orders'].includes(activeLink);
+        const isOrdersActive = ['view_orders', 'view_delivered_orders'].includes(activeLink);
         return savedState ? JSON.parse(savedState) : isOrdersActive;
+    });
+    const [isVouchersOpen, setIsVouchersOpen] = useState(() => {
+        const savedState = localStorage.getItem('isVouchersOpen');
+        const isVouchersActive = ['add_vouchers', 'add_point_discounts', 'view_user_points'].includes(activeLink);
+        return savedState ? JSON.parse(savedState) : isVouchersActive;
     });
 
     useEffect(() => {
@@ -77,6 +82,10 @@ const AdminSidebar = ({
     }, [isOrdersOpen]);
 
     useEffect(() => {
+        localStorage.setItem('isVouchersOpen', JSON.stringify(isVouchersOpen));
+    }, [isVouchersOpen]);
+
+    useEffect(() => {
         const isHomepageActive = [
             'add_image_slideshow',
             'add_featured_product',
@@ -94,8 +103,11 @@ const AdminSidebar = ({
         const isOffersActive = ['add_offer', 'view_offers'].includes(activeLink);
         setIsOffersOpen((prev) => isOffersActive || prev);
 
-        const isOrdersActive = ['view_orders'].includes(activeLink);
+        const isOrdersActive = ['view_orders', 'view_delivered_orders'].includes(activeLink);
         setIsOrdersOpen((prev) => isOrdersActive || prev);
+
+        const isVouchersActive = ['add_vouchers', 'add_point_discounts', 'view_user_points'].includes(activeLink);
+        setIsVouchersOpen((prev) => isVouchersActive || prev);
     }, [activeLink]);
 
     return (
@@ -514,7 +526,26 @@ const AdminSidebar = ({
                                             }`}
                                             onClick={() => setIsSidebarOpen(false)}
                                         >
-                                            View Orders
+                                            View All Orders
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/view_delivered_orders"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'view_delivered_orders'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            View Delivered Orders
                                         </InertiaLink>
                                     </li>
                                 </ul>
@@ -522,6 +553,87 @@ const AdminSidebar = ({
                         </li>
                         <li>
                             <button
+                                onClick={() => setIsVouchersOpen(!isVouchersOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105`}
+                            >
+                                <div className="flex items-center">
+                                    <FontAwesomeIcon icon={faGift} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">Manage Points</span>}
+                                </div>
+                                {!isSidebarMinimized && (
+                                    <span className="transition-transform duration-300 text-xs sm:text-sm">
+                                        {isVouchersOpen ? '▼' : '▶'}
+                                    </span>
+                                )}
+                            </button>
+                            {isVouchersOpen && !isSidebarMinimized && (
+                                <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_vouchers"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_vouchers'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Vouchers
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_point_discounts"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_point_discounts'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Point Discounts
+                                        </InertiaLink>
+                                    </li>
+                                    <li>
+                                        <InertiaLink
+                                            href="/view_user_points"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'view_user_points'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            View User Points
+                                        </InertiaLink>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
+                        <li>
+                           <button
                                 onClick={() => setIsUserRolesOpen(!isUserRolesOpen)}
                                 className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
                                     isDarkMode
@@ -562,6 +674,27 @@ const AdminSidebar = ({
                                     </li>
                                 </ul>
                             )}
+                        </li>
+                        
+                        <li>
+                            <InertiaLink
+                                href="/view_reports"
+                                className={`flex items-center px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105 ${
+                                    activeLink === 'view_reports'
+                                        ? isDarkMode
+                                            ? 'bg-gradient-to-r from-blue-600 to-purple-600'
+                                            : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                        : ''
+                                }`}
+                                onClick={() => setIsSidebarOpen(false)}
+                            >
+                                <FontAwesomeIcon icon={faStar} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                {!isSidebarMinimized && <span className="text-sm sm:text-base">Report</span>}
+                            </InertiaLink>
                         </li>
                     </ul>
                 </nav>

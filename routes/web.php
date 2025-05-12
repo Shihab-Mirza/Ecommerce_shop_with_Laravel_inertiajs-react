@@ -1,5 +1,11 @@
 <?php
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\ReportController;
 
+use App\Http\Controllers\OrderDeliveryController;
+use App\Http\Controllers\VoucherController;
+use App\Http\Controllers\UserPointController;
+use App\Http\Controllers\UserPointRuleController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SslCommerzPaymentController;
@@ -27,17 +33,17 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/checkout1', [SslCommerzPaymentController::class, 'exampleEasyCheckout']);
-Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
 
-Route::post('/pay', [SslCommerzPaymentController::class, 'index']);
+Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
+Route::post('/confirm_order', [SslCommerzPaymentController::class, 'order_confirm']);
+Route::get('/order/{order_id}/{order_token}', [SslCommerzPaymentController::class, 'showOrderConfirm'])->name('show_order_confirm');
+Route::post('/pay/{order_id}/{order_token}', [SslCommerzPaymentController::class, 'index']);
 Route::post('/pay-via-ajax', [SslCommerzPaymentController::class, 'payViaAjax']);
 
 Route::post('/success', [SslCommerzPaymentController::class, 'success']); // Matches success_url
 Route::post('/fail', [SslCommerzPaymentController::class, 'fail']);       // Matches failed_url
 Route::post('/cancel', [SslCommerzPaymentController::class, 'cancel']);   // Matches cancel_url
 Route::post('/ipn', [SslCommerzPaymentController::class, 'ipn']);
-
 
 
 Route::get('/search', [HomeController::class, 'search'])->name('search');
@@ -65,21 +71,46 @@ Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wi
 
 
 
+Route::middleware(['auth', 'delivery'])->group(function () {
 
-
-Route::get('/dashboard', [HomePageController::class,'view_admin_dashboard'])->middleware(['auth', 'verified', 'admin'])->name('dashboard');
-
-
-
-
-
-
+Route::get('/view_pending_orders', [DeliveryController::class, 'index'])->name('pending.order');
+Route::post('/orders/{order_id}/generate-otp', [DeliveryController::class, 'generateOtp'])->name('orders.generate-otp');
+Route::post('/orders/{order_id}/verify-otp', [DeliveryController::class, 'verifyOtp'])->name('orders.verify-otp');
+Route::get('/view_completed_orders', [DeliveryController::class, 'view_completed_order'])->name('completed.order');
 
 
 
+});
+
+Route::get('/order_delivery_home', [DeliveryController::class,'view_delivery_homepage'])->middleware(['auth', 'delivery'])->name('delivery.homepage');
+
+Route::get('/dashboard', [HomePageController::class,'view_admin_dashboard'])->middleware(['auth', 'admin'])->name('dashboard');
 
 
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+
+Route::middleware(['auth', 'admin'])->group(function () {
+
+Route::get('/view_user_points', [UserPointController::class, 'index']);
+
+Route::get('/reports/pdf', [ReportController::class, 'generatePDF'])->name('reports.pdf');
+
+Route::get('/view_reports', [ReportController::class, 'index']);
+
+
+
+Route::get('/view_user_points', [UserPointController::class, 'index']);
+Route::get('/add_point_discounts', [UserPointRuleController::class, 'index'])->name('point-discounts.index');
+Route::post('/point-discounts/earn', [UserPointRuleController::class, 'storeEarnRule'])->name('point-discounts.store.earn');
+Route::post('/point-discounts/redeem', [UserPointRuleController::class, 'storeRedeemRule'])->name('point-discounts.store.redeem');
+Route::put('/point-discounts/{id}', [UserPointRuleController::class, 'update'])->name('point-discounts.update');
+Route::delete('/point-discounts/{id}', [UserPointRuleController::class, 'destroy'])->name('point-discounts.destroy');
+
+
+
+   Route::get('/add_vouchers', [VoucherController::class, 'index'])->name('vouchers.index');
+    Route::post('/vouchers', [VoucherController::class, 'store'])->name('vouchers.store');
+    Route::put('/vouchers/{voucher}', [VoucherController::class, 'update'])->name('vouchers.update');
+    Route::delete('/vouchers/{voucher}', [VoucherController::class, 'destroy'])->name('vouchers.destroy');
 Route::get('/add_category', [CategoryController::class, 'create']);
 Route::post('/categories', [CategoryController::class, 'store']);
 Route::put('/categories/{category}', [CategoryController::class, 'update']);
@@ -164,7 +195,9 @@ Route::get('/view_orders', [OrderController::class, 'index'])->name('orders.inde
 Route::get('/orders/{orderId}/items', [OrderController::class, 'showOrderItems'])->name('orders.items');
 Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
-
+Route::get('/view_delivered_orders', [OrderDeliveryController::class, 'index']);
+Route::get('/orders/{orderId}/items', [OrderDeliveryController::class, 'showOrderItems']);;
+Route::delete('/orders/{id}', [OrderDeliveryController::class, 'destroy']);
 
 
 Route::middleware(['auth'])->group(function () {

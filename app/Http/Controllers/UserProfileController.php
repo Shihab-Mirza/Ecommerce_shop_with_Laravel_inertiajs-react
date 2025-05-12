@@ -17,7 +17,7 @@ class UserProfileController extends Controller
         'auth' => [
             'user' => Auth::user()
         ],
-    
+
     ]);
 }public function update(Request $request)
 {

@@ -120,7 +120,7 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
                 >
                     <div className={`max-w-full mx-auto ${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-2xl shadow-lg p-6 transition-colors duration-300`}>
                         <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'} mb-6`}>
-                            View Orders
+                            View All Orders
                         </h2>
 
                         {successMessage && (
@@ -161,7 +161,7 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
                                         <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Phone</th>
                                         <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[80px] ">Amount</th>
                                         <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[150px] ">Address</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Status</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Payment Status</th>
                                         <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Transaction ID</th>
                                         <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Actions</th>
                                     </tr>

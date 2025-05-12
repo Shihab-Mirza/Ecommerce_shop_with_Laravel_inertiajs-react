@@ -2,7 +2,6 @@ import { Head } from '@inertiajs/react';
 import React from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import SecondaryNavBar from './SecondaryNavBar';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { useForm } from '@inertiajs/react';
@@ -50,9 +49,7 @@ export default function UserProfile({ auth, categories }) {
   return (
     <>
       <Head title="Profile" />
-      <NavBar auth={auth} />
-      <SecondaryNavBar categories={categories} />
-
+      <NavBar auth={auth} categories={categories} />
       <main className="w-full mx-auto p-6 flex space-x-4 min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         {/* User Profile Icon Sidebar */}
         <div className="w-1/5 flex justify-end items-start pr-4 mt-4">

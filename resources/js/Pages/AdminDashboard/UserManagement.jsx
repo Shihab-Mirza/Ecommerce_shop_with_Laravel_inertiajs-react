@@ -200,6 +200,7 @@ const UserManagement = ({ auth, users, search: initialSearch, flash }) => {
                                                     <option value="" disabled>Select User Type</option>
                                                     <option value="admin">Admin</option>
                                                     <option value="user">User</option>
+                                                    <option value="Deliveryman">Deliveryman</option>
                                                 </select>
                                             </td>
                                             <td className="py-3 px-3 w-20">

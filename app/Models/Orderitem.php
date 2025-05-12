@@ -16,7 +16,7 @@ class OrderItem extends Model
         'unit_price',
         'subtotal',
     ];
-   
+
     /**
      * Get the order that owns the order item.
      */

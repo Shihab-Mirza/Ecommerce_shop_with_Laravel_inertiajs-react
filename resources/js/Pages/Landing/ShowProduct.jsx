@@ -1,11 +1,12 @@
+
+
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faPaperPlane, faShoppingCart, faPlus, faMinus, faCheckCircle, faExclamationCircle, faHome ,faHeart } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faPaperPlane, faShoppingCart, faPlus, faMinus, faCheckCircle, faExclamationCircle, faHome, faHeart } from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import SecondaryNavBar from './SecondaryNavBar';
 import LoginModal from './LoginModal';
 import RegistrationModal from './RegistrationModal';
 import { Inertia } from '@inertiajs/inertia'
@@ -240,13 +241,12 @@ export default function ShowProduct({ auth, product, categories }) {
     return (
         <>
             <Head title={product.name} />
-            <NavBar auth={auth} />
-            <SecondaryNavBar categories={categories} />
+            <NavBar auth={auth} categories={categories}/>
             <div className="min-h-screen bg-gray-100 py-2 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
                     {/* Breadcrumb Navigation */}
-                    <div className="mb-1">
-                        <div className="bg-white shadow-lg  border border-gray-200 p-4 w-full">
+                    <div>
+                        <div className="bg-white shadow-sm  border border-gray-200 p-4 w-full -mt-[1px]">
                             <nav className="flex items-center text-sm text-gray-600" aria-label="Breadcrumb">
                                 <Link
                                     href={route('home')}
@@ -298,7 +298,7 @@ export default function ShowProduct({ auth, product, categories }) {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 20 }}
                         transition={{ duration: 0.6 }}
-                        className="bg-white shadow-md overflow-hidden"
+                        className="bg-white shadow-md overflow-hidden -mt-4"
                     >
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6 lg:p-10">
                             <div className="relative flex justify-center items-center">
@@ -320,32 +320,33 @@ export default function ShowProduct({ auth, product, categories }) {
                             <div className="flex flex-col justify-between">
                                 <div>
                                     <div className="flex items-center justify-between mb-4">
-                                        <h1 className="text-[25px] sm:text-[25px] font-sans text-indigo-500">{product.name}</h1>
+                                        <h1 className="text-[25px] sm:text-[25px] font-sans text-black">{product.name}</h1>
                                         <motion.button
-    onClick={handleAddToWishlist}
-    disabled={wishlistProcessing}
-    className={`px-4 py-2 rounded-lg text-sm font-semibold text-black ${
-        wishlistProcessing
-            ? 'bg-white cursor-not-allowed'
-            : 'bg-gray-100'
-    } transition-colors duration-200 flex items-center gap-2`}
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
->
-    <FontAwesomeIcon icon={faHeart} className="mr-2" />
-    Add to Wishlist
-</motion.button>
+                                            onClick={handleAddToWishlist}
+                                            disabled={wishlistProcessing}
+                                            className={`px-4 py-2 rounded-lg text-sm font-semibold text-black ${
+                                                wishlistProcessing
+                                                    ? 'bg-white cursor-not-allowed'
+                                                    : 'bg-gray-100'
+                                            } transition-colors duration-200 flex items-center gap-2`}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                        >
+                                            <FontAwesomeIcon icon={faHeart} className="h-4 text-rose-500" />
+                                            Add to Wishlist
+                                        </motion.button>
                                     </div>
 
                                     <div className="mb-4">
                                         {product.is_offered_product === 'yes' && product.offer ? (
                                             <div className="flex items-center gap-3">
+                                                  <span className="text-l font-sans text-balck line-through">
+                                                Price: {parseFloat(product.price).toFixed(2)} Tk
+                                                </span>
                                                 <span className="text-[15px] sm:text-[15px] font-bold text-red-600">
                                                     {parseFloat(product.offer.offer_price).toFixed(2)} Tk
                                                 </span>
-                                                <span className="text-sm text-gray-400 line-through">
-                                                   Price: {parseFloat(product.price).toFixed(2)} Tk
-                                                </span>
+
                                             </div>
                                         ) : (
                                             <span className="text-[25px] sm:text-[20px] font-bold text-gray-900">
@@ -370,10 +371,11 @@ export default function ShowProduct({ auth, product, categories }) {
 
                                     <div className="mb-6 text-[15px]">
                                         <p className="text-gray-600">
-                                            <span className="font-medium">Product Code:</span> {product.product_code}
+                                        <span className=" font-medium">Brand:</span> {product.brand?.brand_name || 'N/A'}
+                                            <span className=" ml-8 font-medium">Product Code:</span> {product.product_code}
                                         </p>
                                         <p className="text-gray-600">
-                                            <span className="font-medium">Brand:</span> {product.brand?.brand_name || 'N/A'}
+
                                         </p>
                                         <p className="text-gray-600 mt-4">
                                             <span className="font-medium">Overview</span>
@@ -393,6 +395,52 @@ export default function ShowProduct({ auth, product, categories }) {
                                                     return null;
                                                 })}
                                             </ul>
+                                        </div>
+                                        <p className="text-xl font-sans text-balck mt-8">Payment Options</p>
+                                        {/* New Cards Section */}
+                                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 h-24 w-510px]">
+                                            {/* Left Card: Online / Cash on Delivery */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.3 }}
+                                                className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200"
+                                            >
+                                                <div className="flex">
+                                                <span className="text-sm text-black line-through mr-2 mt-3">
+                                                   {parseFloat(product.price).toFixed(2)} Tk
+                                                </span>
+                                                    <span className="text-sm text-gray-500 mt-3">
+                                                        {product.is_offered_product === 'yes' && product.offer ? (
+                                                            `${parseFloat(product.offer.offer_price).toFixed(2)} Tk`
+                                                        ) : (
+                                                            `${parseFloat(product.price).toFixed(2)} Tk`
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-2">Online / Cash on Delivery</p>
+                                            </motion.div>
+                                            {/* Right Card: Store Pickup Available */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.3, delay: 0.1 }}
+                                                className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200"
+                                            >
+                                                <div className="flex">
+                                                <span className="text-sm text-black line-through mr-2 mt-3">
+                                                 {parseFloat(product.price).toFixed(2)} Tk
+                                                </span>
+                                                <span className="text-sm text-gray-500 mt-3">
+                                                {product.is_offered_product === 'yes' && product.offer ? (
+                                                            `${parseFloat(product.offer.offer_price).toFixed(2)} Tk`
+                                                        ) : (
+                                                            `${parseFloat(product.price).toFixed(2)} Tk`
+                                                        )}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 mt-2">Store Pickup Available</p>
+                                            </motion.div>
                                         </div>
                                     </div>
 
@@ -586,7 +634,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Write a Review</h3>
                                     <form
                                         onSubmit={handleReviewSubmit}
-                                        className="backdrop-blur-md bg-white/30 p-6 rounded-xl shadow-lg border border-white/20"
+                                        className="backdrop-blur-md bg-white/30 p-6 rounded-xl shadow-md border border-white/20"
                                     >
                                         <div className="mb-4">
                                             <label className="block text-gray-800 font-medium text-sm mb-2">Rating</label>
@@ -691,7 +739,7 @@ export default function ShowProduct({ auth, product, categories }) {
                     />
                 )}
             </AnimatePresence>
-
+<div className='mb-8'></div>
             <Footer />
         </>
     );

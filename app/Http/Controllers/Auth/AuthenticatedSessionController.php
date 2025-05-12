@@ -44,7 +44,13 @@ class AuthenticatedSessionController extends Controller
         // Check the user's type and redirect accordingly
         if ($user->usertype == 'admin') {
             return redirect()->intended(route('dashboard', absolute: false));
-        } else {
+        } 
+        else if ($user->usertype == 'Deliveryman')
+        {
+            return redirect()->intended(route('delivery.homepage', absolute: false));
+        } 
+        
+        else {
             return redirect()->route('home');
         }
     }

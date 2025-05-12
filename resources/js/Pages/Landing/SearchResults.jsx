@@ -1,20 +1,18 @@
 import React from 'react';
 import { Head, Link } from '@inertiajs/react';
 import NavBar from './Navbar';
-import SecondaryNavBar from './SecondaryNavBar';
 import Footer from './Footer';
 
 export default function SearchResults({ auth, products, query, categories }) {
   return (
     <>
       <Head title={`Search Results for "${query}"`} />
-      <NavBar auth={auth} />
-      <SecondaryNavBar categories={categories} />
+      <NavBar auth={auth} categories={categories}  />
       <div className="container mx-auto px-4 py-4">
         {/* Main Content */}
         <main className="flex-1">
           {products.data.length === 0 ? (
-            <p className="text-black text-center">No products found.</p>
+            <p className="text-black text-center mb-80">No products found.....</p>
           ) : (
             <>
               <div className="flex flex-col">

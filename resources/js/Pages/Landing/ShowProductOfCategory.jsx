@@ -2,7 +2,12 @@ import { Head, Link } from '@inertiajs/react';
 import React, { useState } from 'react';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import SecondaryNavBar from './SecondaryNavBar';
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faHome, faFire } from '@fortawesome/free-solid-svg-icons';
+
+// Add icons to the library
+library.add(faHome, faFire);
 
 export default function ShowProductOfCategory({ auth, title, products, categories }) {
   const [filters, setFilters] = useState({
@@ -32,19 +37,27 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
   return (
     <>
       <Head title={title} />
-      <NavBar auth={auth} />
-      <SecondaryNavBar categories={categories} />
+      <NavBar auth={auth} categories={categories}  />
       <div className="container mx-auto px-4">
-        {/* Horizontal card below NavBar */}
-        <div className="my-2 ml-64">
-          <div className="bg-white shadow-lg rounded-lg border border-gray-200 p-2">
-            <h1 className="text-lg font-bold text-left mb-0">All {title} Products</h1>
-          </div>
-        </div>
+        {/* Breadcrumb Navigation */}
+        <nav className="my-2 ml-64 -mb-1" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-2 bg-white shadow-lg border border-gray-200 rounded-md p-3 ">
+            <li>
+              <Link href="/" className="flex items-center text-gray-600 hover:text-blue-600">
+                <FontAwesomeIcon icon="home" className="w-4 h-4" />
+                <span className="sr-only">Home</span>
+              </Link>
+            </li>
+            <li className="flex items-center">
+              <span className="text-gray-400 mx-1">/</span>
+              <span className="text-md font-semibold text-gray-800">All {title} Products</span>
+            </li>
+          </ol>
+        </nav>
       </div>
       <div className="container mx-auto px-4 py-4 flex">
         {/* Filter Sidebar */}
-        <aside className="w-64 pr-4">
+        <aside className="w-64 h-auto pr-4">
           <div className="bg-white/10 backdrop-blur-lg shadow-xl rounded-2xl border border-white/20 p-6 transition-all duration-300 hover:shadow-2xl">
             <h2 className="text-xl font-bold mb-6 text-gray-800 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Refine Your Search
@@ -138,7 +151,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
                 >
                   {product.is_offered_product === 'yes' && (
                     <div className="absolute top-2 left-2 animate-fire">
-                      <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
+                      <FontAwesomeIcon icon="fire" className="text-yellow-500 text-xl animate-pulse" />
                     </div>
                   )}
                   {/* Product Image as Link */}

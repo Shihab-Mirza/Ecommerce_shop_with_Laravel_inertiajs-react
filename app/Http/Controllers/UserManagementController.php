@@ -37,7 +37,7 @@ class UserManagementController extends Controller
     public function updateUserType(Request $request, $id)
     {
         $request->validate([
-            'usertype' => 'required|in:admin,user',
+            'usertype' => 'required|in:admin,user,Deliveryman',
         ]);
 
         $user = User::findOrFail($id);
