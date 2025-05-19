@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Category;
+use App\Models\Userpoint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -12,14 +13,20 @@ class UserProfileController extends Controller
 {
 
     public function index()
-{
-    return Inertia::render('Landing/UserProfile', [
-        'auth' => [
-            'user' => Auth::user()
-        ],
+    {
+        $user = Auth::user();
+        $userPoints = Userpoint::where('user_id', $user->id)->first()->user_point ?? 0;
 
-    ]);
-}public function update(Request $request)
+        return Inertia::render('Landing/UserProfile', [
+            'auth' => [
+                'user' => $user
+            ],
+            'userPoints' => $userPoints,
+        ]);
+    }
+
+
+public function update(Request $request)
 {
     $user = $request->user();
 

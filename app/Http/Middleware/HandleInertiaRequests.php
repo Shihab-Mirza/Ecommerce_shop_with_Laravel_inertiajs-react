@@ -85,6 +85,13 @@ class HandleInertiaRequests extends Middleware
             'cartItems' => $cartItems,
             'checkoutToken' => $checkoutToken,
             'cartId' => $cartId,
+             'flash' => [
+            'success' => fn () => $request->session()->get('success'),
+            'error' => fn () => $request->session()->get('error'),
+             'review_success' => fn () => $request->session()->get('review_success'),
+             'review_error' => fn () => $request->session()->get('review_error'),
+
+        ],
         ];
     }
 }

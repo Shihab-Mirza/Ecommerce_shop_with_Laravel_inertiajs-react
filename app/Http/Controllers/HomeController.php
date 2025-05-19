@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Homepage;
 use App\Models\Cart;
+use App\Models\Order;
+use App\Models\Orderitem;
 use Inertia\Inertia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +16,7 @@ use App\Models\Subcategory;
 use App\Models\Brand;
 use App\Models\Offer;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -161,83 +164,87 @@ class HomeController extends Controller
         ]);
     }
 
-    public function showProducts(Request $request)
+      public function byCategory(Request $request, $id)
     {
-        $categoryId = $request->query('category_id');
-        $subcategoryId = $request->query('subcategory_id');
-        $brandId = $request->query('brand_id');
+        // Retrieve query parameters for filters
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
         $inStock = $request->query('inStock');
         $offered = $request->query('offered');
 
-        $query = Product::query()->with(['category', 'subcategory', 'brand', 'offer']);
-
-        if ($categoryId && is_numeric($categoryId)) {
-            $query->where('category_id', $categoryId);
+        // Validate price inputs
+        if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
+            return redirect()->back()->withErrors(['minPrice' => 'Minimum price must be a non-negative number.']);
+        }
+        if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
+            return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
         }
 
-        if ($subcategoryId && is_numeric($subcategoryId)) {
-            $query->where('subcategory_id', $subcategoryId);
+        // Build the query for products in the specified category
+        $query = Product::query()->where('category_id', $id)
+            ->with(['category', 'subcategory', 'brand', 'offer']);
+
+        // Apply price filters
+        if ($minPrice !== null) {
+            $query->where(function ($q) use ($minPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($minPrice) {
+                                 $offerQuery->where('offer_price', '>=', $minPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '>=', $minPrice);
+                })
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '>=', $minPrice);
+                });
+            });
         }
 
-        if ($brandId && is_numeric($brandId)) {
-            $query->where('brand_id', $brandId);
+        if ($maxPrice !== null) {
+            $query->where(function ($q) use ($maxPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
+                                 $offerQuery->where('offer_price', '<=', $maxPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '<=', $maxPrice);
+                })
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '<=', $maxPrice);
+                });
+            });
         }
 
-        if ($minPrice && is_numeric($minPrice)) {
-            $query->where('price', '>=', $minPrice);
-        }
-
-        if ($maxPrice && is_numeric($maxPrice)) {
-            $query->where('price', '<=', $maxPrice);
-        }
-
+        // Apply inStock filter
         if ($inStock) {
             $query->where('quantity', '>', 0);
         }
 
+        // Apply offered filter
         if ($offered) {
-            $query->where('is_offered_product', 'yes')
-                  ->whereHas('offer', function ($q) {
-                      $q->where('start_date', '<=', Carbon::now())
-                        ->where('end_date', '>=', Carbon::now());
-                  });
+            $query->where('is_offered_product', 'yes');
         }
 
-        $title = 'Products';
-        if ($categoryId && is_numeric($categoryId)) {
-            $category = Category::findOrFail($categoryId);
-            $title = $category->name;
-        } elseif ($subcategoryId && is_numeric($subcategoryId)) {
-            $subcategory = Subcategory::findOrFail($subcategoryId);
-            $title = $subcategory->sub_category_name;
-        } elseif ($brandId && is_numeric($brandId)) {
-            $brand = Brand::findOrFail($brandId);
-            $title = $brand->brand_name;
-        }
+        // Paginate the results
+        $products = $query->paginate(20)->appends($request->query());
 
-        $products = $query->paginate(20);
-        $categories = Category::with(['subcategories.brands'])->get();
-
-        return Inertia::render('Landing/ShowProductOfCategory', [
-            'auth' => [
-                'user' => Auth::user(),
-            ],
-            'title' => $title,
-            'categories' => $categories,
-            'products' => $products,
-        ]);
-    }
-
-    public function byCategory($id)
-    {
-        $products = Product::where('category_id', $id)
-            ->with(['category', 'subcategory', 'brand', 'offer'])
-            ->paginate(20);
+        // Fetch category and categories for navigation
         $category = Category::findOrFail($id);
         $categories = Category::with(['subcategories.brands'])->get();
 
+        // Return Inertia response
         return Inertia::render('Landing/ShowProductOfCategory', [
             'auth' => [
                 'user' => Auth::user(),
@@ -245,17 +252,99 @@ class HomeController extends Controller
             'title' => $category->name,
             'products' => $products,
             'categories' => $categories,
+            'filters' => [
+                'minPrice' => $minPrice ?? '',
+                'maxPrice' => $maxPrice ?? '',
+                'inStock' => $inStock ? true : false,
+                'offered' => $offered ? true : false,
+                'category_id' => $id,
+                'subcategory_id' => '',
+                'brand_id' => '',
+            ],
         ]);
     }
 
-    public function bySubcategory($id)
+    public function bySubcategory(Request $request, $id)
     {
-        $products = Product::where('subcategory_id', $id)
-            ->with(['category', 'subcategory', 'brand', 'offer'])
-            ->paginate(20);
+        // Retrieve query parameters for filters
+        $minPrice = $request->query('minPrice');
+        $maxPrice = $request->query('maxPrice');
+        $inStock = $request->query('inStock');
+        $offered = $request->query('offered');
+
+        // Validate price inputs
+        if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
+            return redirect()->back()->withErrors(['minPrice' => 'Minimum price must be a non-negative number.']);
+        }
+        if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
+            return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
+        }
+
+        // Build the query for products in the specified subcategory
+        $query = Product::query()->where('subcategory_id', $id)
+            ->with(['category', 'subcategory', 'brand', 'offer']);
+
+        // Apply price filters
+        if ($minPrice !== null) {
+            $query->where(function ($q) use ($minPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($minPrice) {
+                                 $offerQuery->where('offer_price', '>=', $minPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '>=', $minPrice);
+                })
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '>=', $minPrice);
+                });
+            });
+        }
+
+        if ($maxPrice !== null) {
+            $query->where(function ($q) use ($maxPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
+                                 $offerQuery->where('offer_price', '<=', $maxPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '<=', $maxPrice);
+                })
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '<=', $maxPrice);
+                });
+            });
+        }
+
+        // Apply inStock filter
+        if ($inStock) {
+            $query->where('quantity', '>', 0);
+        }
+
+        // Apply offered filter
+        if ($offered) {
+            $query->where('is_offered_product', 'yes');
+        }
+
+        // Paginate the results
+        $products = $query->paginate(20)->appends($request->query());
+
+        // Fetch subcategory and categories for navigation
         $subcategory = Subcategory::findOrFail($id);
         $categories = Category::with(['subcategories.brands'])->get();
 
+        // Return Inertia response
         return Inertia::render('Landing/ShowProductOfCategory', [
             'auth' => [
                 'user' => Auth::user(),
@@ -263,17 +352,99 @@ class HomeController extends Controller
             'title' => $subcategory->sub_category_name,
             'products' => $products,
             'categories' => $categories,
+            'filters' => [
+                'minPrice' => $minPrice ?? '',
+                'maxPrice' => $maxPrice ?? '',
+                'inStock' => $inStock ? true : false,
+                'offered' => $offered ? true : false,
+                'category_id' => '',
+                'subcategory_id' => $id,
+                'brand_id' => '',
+            ],
         ]);
     }
 
-    public function byBrand($id)
+    public function byBrand(Request $request, $id)
     {
-        $products = Product::where('brand_id', $id)
-            ->with(['category', 'subcategory', 'brand', 'offer'])
-            ->paginate(20);
+        // Retrieve query parameters for filters
+        $minPrice = $request->query('minPrice');
+        $maxPrice = $request->query('maxPrice');
+        $inStock = $request->query('inStock');
+        $offered = $request->query('offered');
+
+        // Validate price inputs
+        if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
+            return redirect()->back()->withErrors(['minPrice' => 'Minimum price must be a non-negative number.']);
+        }
+        if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
+            return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
+        }
+
+        // Build the query for products in the specified brand
+        $query = Product::query()->where('brand_id', $id)
+            ->with(['category', 'subcategory', 'brand', 'offer']);
+
+        // Apply price filters
+        if ($minPrice !== null) {
+            $query->where(function ($q) use ($minPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($minPrice) {
+                                 $offerQuery->where('offer_price', '>=', $minPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '>=', $minPrice);
+                })
+                ->orWhere(function ($subQuery) use ($minPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '>=', $minPrice);
+                });
+            });
+        }
+
+        if ($maxPrice !== null) {
+            $query->where(function ($q) use ($maxPrice) {
+                // Offered products: filter by offer_price
+                $q->where(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', 'yes')
+                             ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
+                                 $offerQuery->where('offer_price', '<=', $maxPrice);
+                             });
+                })
+                // Non-offered products or products without an offer: filter by price
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->where('is_offered_product', '!=', 'yes')
+                             ->where('price', '<=', $maxPrice);
+                })
+                ->orWhere(function ($subQuery) use ($maxPrice) {
+                    $subQuery->whereDoesntHave('offer')
+                             ->where('price', '<=', $maxPrice);
+                });
+            });
+        }
+
+        // Apply inStock filter
+        if ($inStock) {
+            $query->where('quantity', '>', 0);
+        }
+
+        // Apply offered filter
+        if ($offered) {
+            $query->where('is_offered_product', 'yes');
+        }
+
+        // Paginate the results
+        $products = $query->paginate(20)->appends($request->query());
+
+        // Fetch brand and categories for navigation
         $brand = Brand::findOrFail($id);
         $categories = Category::with(['subcategories.brands'])->get();
 
+        // Return Inertia response
         return Inertia::render('Landing/ShowProductOfCategory', [
             'auth' => [
                 'user' => Auth::user(),
@@ -281,35 +452,75 @@ class HomeController extends Controller
             'title' => $brand->brand_name,
             'products' => $products,
             'categories' => $categories,
+            'filters' => [
+                'minPrice' => $minPrice ?? '',
+                'maxPrice' => $maxPrice ?? '',
+                'inStock' => $inStock ? true : false,
+                'offered' => $offered ? true : false,
+                'category_id' => '',
+                'subcategory_id' => '',
+                'brand_id' => $id,
+            ],
         ]);
     }
 
-
-    public function view_full_Product($id)
+    // Existing show method for individual product pages
+    public function show($id)
     {
-        $product = Product::with([
-            'category:id,name',
-            'subcategory:id,category_id,sub_category_name',
-            'brand:id,brand_name',
-            'offer',
-            'reviews.user:id,name'
-        ])->findOrFail($id);
+        $product = Product::with(['category', 'subcategory', 'brand', 'offer', 'reviews'])->findOrFail($id);
+        $categories = Category::with(['subcategories.brands'])->get();
 
         return Inertia::render('Landing/ShowProduct', [
+            'auth' => [
+                'user' => Auth::user(),
+            ],
             'product' => $product,
-            'flash' => session('flash'),
+            'categories' => $categories,
         ]);
     }
 
+public function view_full_Product($id)
+{
+    $product = Product::with([
+        'category:id,name',
+        'subcategory:id,category_id,sub_category_name',
+        'brand:id,brand_name',
+        'offer',
+        'reviews' => function ($query) {
+            $query->with('user:id,name')->orderBy('created_at', 'desc')->take(2);
+        }
+    ])->findOrFail($id);
+
+    return Inertia::render('Landing/ShowProduct', [
+        'product' => $product,
+    ]);
+}
 
 
 
+public function view_order_history_index()
+    {
+        // Verify authentication
+        if (!Auth::check()) {
+            return Inertia::render('Landing/ViewOrderHistory', [
+                'orders' => [],
+                'error' => 'User not authenticated',
+                'auth' => null,
+                'categories' => [], // Assuming categories are needed for Navbar
+            ]);
+        }
+
+        // Fetch orders with related items and products
+        $orders = Order::with(['items.product' => function ($query) {
+            $query->select('id', 'name', 'image'); // Select necessary fields
+        }])
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
 
 
-
-
-
-
-
-
+        return Inertia::render('Landing/ViewOrderHistory', [
+            'orders' => $orders,
+        ]);
+    }
 }

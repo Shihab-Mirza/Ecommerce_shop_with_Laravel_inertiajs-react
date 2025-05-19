@@ -32,7 +32,9 @@ use Inertia\Inertia;
 
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
+Route::middleware(['auth'])->group(function () {
+    Route::get('/order-history', [HomeController::class, 'view_order_history_index'])->name('order.history');
+});
 
 Route::get('/checkout2/{cartId}/{checkoutToken}', [SslCommerzPaymentController::class, 'exampleHostedCheckout']);
 Route::post('/confirm_order', [SslCommerzPaymentController::class, 'order_confirm']);
@@ -47,7 +49,6 @@ Route::post('/ipn', [SslCommerzPaymentController::class, 'ipn']);
 
 
 Route::get('/search', [HomeController::class, 'search'])->name('search');
-
 Route::post('/cart/add/{id}', [CartController::class, 'add'])->name('cart.add');
 
 

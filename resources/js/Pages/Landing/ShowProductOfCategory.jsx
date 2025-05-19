@@ -9,16 +9,19 @@ import { faHome, faFire } from '@fortawesome/free-solid-svg-icons';
 // Add icons to the library
 library.add(faHome, faFire);
 
-export default function ShowProductOfCategory({ auth, title, products, categories }) {
+export default function ShowProductOfCategory({ auth, title, products, categories, filters: initialFilters, errors }) {
   const [filters, setFilters] = useState({
-    minPrice: '',
-    maxPrice: '',
-    inStock: false,
-    offered: false,
+    minPrice: initialFilters?.minPrice && parseFloat(initialFilters.minPrice) >= 0 ? initialFilters.minPrice : '',
+    maxPrice: initialFilters?.maxPrice && parseFloat(initialFilters.maxPrice) >= 0 ? initialFilters.maxPrice : '',
+    inStock: initialFilters?.inStock || false,
+    offered: initialFilters?.offered || false,
   });
 
   const handleFilterChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (type === 'number' && value !== '' && parseFloat(value) < 0) {
+      return; // Prevent negative values
+    }
     setFilters((prev) => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -26,9 +29,15 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
   };
 
   const applyFilters = () => {
+    // Validate non-negative prices
+    if ((filters.minPrice !== '' && parseFloat(filters.minPrice) < 0) ||
+        (filters.maxPrice !== '' && parseFloat(filters.maxPrice) < 0)) {
+      alert('Price cannot be negative.');
+      return;
+    }
     const query = new URLSearchParams();
-    if (filters.minPrice) query.append('minPrice', filters.minPrice);
-    if (filters.maxPrice) query.append('maxPrice', filters.maxPrice);
+    if (filters.minPrice !== '') query.append('minPrice', filters.minPrice);
+    if (filters.maxPrice !== '') query.append('maxPrice', filters.maxPrice);
     if (filters.inStock) query.append('inStock', '1');
     if (filters.offered) query.append('offered', '1');
     window.location.assign(`?${query.toString()}`);
@@ -37,11 +46,11 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
   return (
     <>
       <Head title={title} />
-      <NavBar auth={auth} categories={categories}  />
+      <NavBar auth={auth} categories={categories} />
       <div className="container mx-auto px-4">
         {/* Breadcrumb Navigation */}
         <nav className="my-2 ml-64 -mb-1" aria-label="Breadcrumb">
-          <ol className="flex items-center space-x-2 bg-white shadow-lg border border-gray-200 rounded-md p-3 ">
+          <ol className="flex items-center space-x-2 bg-white shadow-lg border border-gray-200 rounded-md p-3">
             <li>
               <Link href="/" className="flex items-center text-gray-600 hover:text-blue-600">
                 <FontAwesomeIcon icon="home" className="w-4 h-4" />
@@ -54,6 +63,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
             </li>
           </ol>
         </nav>
+
       </div>
       <div className="container mx-auto px-4 py-4 flex">
         {/* Filter Sidebar */}
@@ -62,6 +72,17 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
             <h2 className="text-xl font-bold mb-6 text-gray-800 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Refine Your Search
             </h2>
+                    {/* Error Messages */}
+        {errors.minPrice && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span>{errors.minPrice}</span>
+          </div>
+        )}
+        {errors.maxPrice && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span>{errors.maxPrice}</span>
+          </div>
+        )}
             <div className="mb-6">
               <h3 className="text-sm font-semibold mb-3 text-gray-700">Price Range</h3>
               <div className="flex items-center space-x-3">
@@ -71,6 +92,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
                   value={filters.minPrice}
                   onChange={handleFilterChange}
                   placeholder="Min"
+                  min="0"
                   className="w-full p-3 bg-gray-100/50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 />
                 <span className="text-gray-600">-</span>
@@ -80,6 +102,7 @@ export default function ShowProductOfCategory({ auth, title, products, categorie
                   value={filters.maxPrice}
                   onChange={handleFilterChange}
                   placeholder="Max"
+                  min="0"
                   className="w-full p-3 bg-gray-100/50 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 />
               </div>

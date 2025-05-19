@@ -6,7 +6,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Brand;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Facades\Storage;
 class Product extends Model
 {
     use HasFactory;
@@ -83,5 +83,12 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    // Accessor for image path
+    public function getImagePathAttribute()
+    {
+        // Assuming 'image' is the column name
+        return $this->image ? Storage::url($this->image) : null;
     }
 }

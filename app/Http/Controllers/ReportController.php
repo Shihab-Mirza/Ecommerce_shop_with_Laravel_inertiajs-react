@@ -42,9 +42,7 @@ class ReportController extends Controller
         $orderCount = $orders->count();
         $totalAmount = $orders->sum('amount');
 
-        if ($orders->isEmpty()) {
-            return redirect()->back()->withErrors(['message' => 'No orders found for the selected date range.']);
-        }
+
 
         // Fetch new products added within the date range
         $products = Product::whereBetween('created_at', [$fromDate, $toDate])
@@ -92,7 +90,7 @@ class ReportController extends Controller
 
         ];
 
-        $fileName = 'orders_report_' . $fromDate->toDateString() . '_' . $toDate->toDateString() . '.pdf';
+        $fileName = 'report_' . $fromDate->toDateString() . '_' . $toDate->toDateString() . '.pdf';
         $pdf = Pdf::loadView('reports', $data);
 
         return $pdf->stream($fileName);

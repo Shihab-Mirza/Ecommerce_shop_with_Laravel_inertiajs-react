@@ -10,7 +10,8 @@ use App\Models\Voucher;
 use App\Models\Category;
 use App\Models\Userpoint;
 use App\Models\Userpoint_rule;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderConfirmation;
 use App\Models\Orderitem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -245,7 +246,7 @@ public function order_confirm(Request $request)
         'used_vouchers' => $usedVouchers,
         'amount_discounted_on_points' => $pointsDiscount,
         'amount_discounted_on_vouchers' => $voucherDiscount,
-        'order_type' => $request->order_type, // Added order_type
+        'order_type' => $request->order_type,
     ]);
 
     // Insert cart items into order_items
@@ -302,8 +303,10 @@ public function order_confirm(Request $request)
     // Delete cart after order is placed
     $cart->delete();
 
+            Mail::to($order->email)->send(new OrderConfirmation($order));
+
     return redirect()->route('show_order_confirm', [
-        'order_id' => $order->id,
+        'order_id' => $order->order_id,
         'order_token' => $order->order_token,
         'flash' => [
             'error' => session('error'),
@@ -317,7 +320,7 @@ public function order_confirm(Request $request)
 public function showOrderConfirm($order_id, $order_token)
     {
         // Fetch the order based on order_id and order_token
-        $order = Order::where('id', $order_id)
+        $order = Order::where('order_id', $order_id)
             ->where('order_token', $order_token)
             ->where('user_id', Auth::id())
             ->first();
@@ -375,7 +378,6 @@ public function showOrderConfirm($order_id, $order_token)
             'order_type' =>$order->order_type,
         ];
 
-        // Fetch categories for NavBar (if needed)
 
         return Inertia::render('Landing/OrderConfirm', [
             'order_token' => $order->order_token,
@@ -551,6 +553,7 @@ public function showOrderConfirm($order_id, $order_token)
         $amount = $request->input('amount');
         $currency = $request->input('currency');
 
+
         $sslc = new SslCommerzNotification();
 
         #Check order status in order tabel against the transaction id or order id.
@@ -571,12 +574,26 @@ public function showOrderConfirm($order_id, $order_token)
                     ->where('transaction_id', $tran_id)
                     ->update(['status' => 'Processing']);
 
+
                 echo "<br >Transaction is successfully Completed";
             }
         } else if ($order_details->status == 'Processing' || $order_details->status == 'Complete') {
             /*
              That means through IPN Order status already updated. Now you can just show the customer that transaction is completed. No need to udate database.
              */
+              $order_data = Order::where('transaction_id', $tran_id)->get();
+              $order_amount=$order_data->amount;
+              $userid=$order_data->user_id;
+              $minimum=Userpoint_rule::all();
+    $userPoints = Userpoint::where('user_id', $userid)->first();
+
+    $minimum_taka =$minimum-> minimum_taka_spent;
+              $minimum_point =$minimum-> points_per_minimum_taka;
+    $pointsadded= ( $order_amount / $minimum_taka) * (float)$minimum_point;
+         $userPoints->user_point += $pointsadded;
+
+        $userPoints->save();
+
             echo "Transaction is successfully Completed";
         } else {
             #That means something wrong happened. You can redirect customer to your product page.

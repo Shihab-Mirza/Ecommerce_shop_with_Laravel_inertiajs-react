@@ -12,6 +12,8 @@ use App\Models\Offer;
 use App\Models\Order;
 use App\Models\Orderitem;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\DeliveryOtp;
 class DeliveryController extends Controller
 {
      public function view_delivery_homepage() {
@@ -66,6 +68,7 @@ class DeliveryController extends Controller
         // Update the order with the new OTP
         $order->delivery_otp = $otp;
         $order->save();
+        Mail::to($order->email)->send(new DeliveryOtp($order));
 
         // Optionally, send the OTP to the customer (e.g., via email or SMS)
         // Example: Mail::to($order->email)->send(new OtpMail($otp));

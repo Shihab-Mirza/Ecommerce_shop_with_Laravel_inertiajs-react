@@ -33,9 +33,9 @@ class CartController extends Controller
         $product = Product::find($id);
 
         if (!$product) {
-            return back()->with('flash', [
-                'error' => 'Product not found.',
-            ]);
+            return back()->with(
+                'error' ,'Product not found.'
+            );
         }
 
         if (Auth::check()) {
@@ -74,9 +74,9 @@ class CartController extends Controller
                 ]);
             }
 
-            return back()->with('flash', [
-                'success' => "{$request->quantity} x {$product->name} added to cart successfully!",
-            ]);
+            return back()->with(
+                'success' , "{$request->quantity} x {$product->name} added to cart successfully!",
+            );
         } else {
             // Guest user
             $sessionId = Session::getId();
@@ -110,9 +110,9 @@ class CartController extends Controller
                 ]);
             }
 
-            return back()->with('flash', [
-                'success' => "{$request->quantity} x {$product->name} added to cart successfully!",
-            ]);
+            return back()->with(
+                'success' , "{$request->quantity} x {$product->name} added to cart successfully!"
+            );
         }
     }
 

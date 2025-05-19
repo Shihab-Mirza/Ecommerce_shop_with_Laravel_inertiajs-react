@@ -169,7 +169,6 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
 
     if (!auth.user) {
       setPendingCheckout(true);
-      // Assuming a login modal is available; you may need to import and manage it
       alert('Please log in to proceed to checkout.');
     } else {
       Inertia.get(`/checkout2/${props.cartId}/${props.checkoutToken}`);
@@ -189,11 +188,11 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
     if (!iconData) return null;
 
     if (iconName.startsWith('fa-')) {
-      return <FontAwesomeIcon icon={iconData} className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black" />;
+      return <FontAwesomeIcon icon={iconData} className="text-2xl sm:text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black" />;
     } else if (iconName.startsWith('lucide-')) {
-      return <span className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
+      return <span className="text-2xl sm:text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
     } else {
-      return <span className="text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
+      return <span className="text-2xl sm:text-3xl mb-2 transition-transform duration-300 group-hover:scale-125 group-hover:animate-pulse text-black">{React.createElement(iconData, { size: 24 })}</span>;
     }
   };
 
@@ -202,15 +201,15 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
       <Head title="Home" />
       <NavBar auth={auth} categories={categories} />
 
-      <main className="p-4 relative">
+      <main className="p-2 sm:p-4 relative">
         {/* Floating Cart Icon */}
         <button
           onClick={toggleCartModal}
-          className="fixed bottom-8 right-8 z-50 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+          className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-50 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
         >
           <FontAwesomeIcon icon={faShoppingCart} size="lg" />
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
               {cartCount}
             </span>
           )}
@@ -223,34 +222,34 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
               className="fixed inset-0 bg-black/50"
               onClick={toggleCartModal}
             ></div>
-            <div className="w-full max-w-sm bg-white h-full shadow-xl transform transition-transform duration-300 ease-in-out translate-x-0">
-              <div className="p-6 flex justify-between items-center border-b">
-                <h2 className="text-xl font-semibold text-gray-900">Your Cart ({cartCount})</h2>
+            <div className="w-full max-w-xs sm:max-w-sm bg-white h-full shadow-xl transform transition-transform duration-300 ease-in-out translate-x-0">
+              <div className="p-4 sm:p-6 flex justify-between items-center border-b">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Your Cart ({cartCount})</h2>
                 <button onClick={toggleCartModal} className="text-gray-600 hover:text-gray-900">
                   <FontAwesomeIcon icon={faTimes} size="lg" />
                 </button>
               </div>
-              <div className="p-6 overflow-y-auto h-[calc(100%-8rem)]">
+              <div className="p-4 sm:p-6 overflow-y-auto h-[calc(100%-8rem)]">
                 {cartCount === 0 ? (
-                  <p className="text-gray-500 text-center">Your cart is empty.</p>
+                  <p className="text-gray-500 text-center text-sm sm:text-base">Your cart is empty.</p>
                 ) : (
                   <div className="space-y-4">
                     {cartItems.map((item) => (
-                      <div key={item.id} className="flex items-center gap-4 border-b pb-4">
+                      <div key={item.id} className="flex items-center gap-3 sm:gap-4 border-b pb-4">
                         {item.image_path ? (
                           <img
                             src={`/storage/${item.image_path}`}
                             alt={item.product_name || 'Product'}
-                            className="w-16 h-16 object-cover rounded border border-gray-200"
+                            className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded border border-gray-200"
                           />
                         ) : (
-                          <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded flex items-center justify-center text-gray-400 text-xs">
                             No Image
                           </div>
                         )}
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-900">{item.product_name || 'Unknown Product'}</h3>
-                          <div className="text-sm text-gray-500">
+                          <h3 className="text-xs sm:text-sm font-medium text-gray-900">{item.product_name || 'Unknown Product'}</h3>
+                          <div className="text-xs sm:text-sm text-gray-500">
                             {item.is_offered_product === 'yes' && item.offer_price !== null ? (
                               <>
                                 <span className="text-green-600 font-semibold">Tk {item.offer_price.toFixed(2)}</span>
@@ -261,13 +260,13 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-1">
-                            <label className="text-sm text-gray-700">Qty:</label>
+                            <label className="text-xs sm:text-sm text-gray-700">Qty:</label>
                             <input
                               type="number"
                               min="1"
                               value={item.quantity}
                               onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value))}
-                              className="w-16 border rounded px-2 py-1 text-sm"
+                              className="w-14 sm:w-16 border rounded px-2 py-1 text-xs sm:text-sm"
                             />
                             {item.quantity > item.available_stock && (
                               <span className="text-red-500 text-xs">
@@ -275,7 +274,7 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-700 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-700 mt-1">
                             Total: Tk
                             {(item.is_offered_product === 'yes' && item.offer_price !== null
                               ? item.offer_price * item.quantity
@@ -284,14 +283,14 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                         </div>
                         <button
                           onClick={() => handleRemoveItem(item.id)}
-                          className="text-red-500 hover:text-red-700"
+                          className="text-red-500 hover:text-red-700 text-xs sm:text-sm"
                         >
                           Remove
                         </button>
                       </div>
                     ))}
                     <div className="mt-4">
-                      <div className="flex justify-between text-lg font-semibold">
+                      <div className="flex justify-between text-base sm:text-lg font-semibold">
                         <span>Total:</span>
                         <span>
                           Tk
@@ -305,7 +304,7 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                       </div>
                       <button
                         onClick={handleCheckout}
-                        className={`w-full mt-4 px-4 py-2 rounded-full text-center transition duration-300 ${
+                        className={`w-full mt-4 px-4 py-2 rounded-full text-center text-sm sm:text-base transition duration-300 ${
                           isCheckoutDisabled
                             ? 'bg-gray-800 text-white cursor-not-allowed'
                             : 'bg-gray-800 text-white hover:bg-gray-700'
@@ -323,13 +322,43 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
         )}
 
         {/* Top Section with Category and Image */}
-        <div className="flex flex-col md:flex-row mb-12">
-          <div className="md:w-1/2 pr-4 mb-6 md:mb-0 lg:ml-7">
-            <h1 className="text-2xl font-extrabold mb-4 md:mt-4 mt-4 ml-28 sd:ml-7 md:ml-16 bg-gradient-to-r from-blue-600 via-teal-500 to-green-600 bg-clip-text text-transparent tracking-tight relative group animate-water-flow">
-              <span className="absolute -bottom-1 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500 transform scale-x-110 group-hover:scale-x-105 transition-transform duration-300 ease-in-out -ml-9"></span>
+        <div className="flex flex-col md:flex-row mb-8 sm:mb-12">
+          {/* Image Section (Slideshow) */}
+          <div className="md:w-2/3 px-2 sm:px-4 lg:mt-8 md:mt-4 sm:mt-16 mt-14 lg:mr-7 order-1 md:order-2">
+            <div className="bg-white shadow-md rounded-xl border border-gray-100 h-48 sm:h-64 md:h-96 flex items-center justify-center overflow-hidden relative">
+              {images && images.length > 0 ? (
+                <img
+                  src={images[currentImageIndex]?.url}
+                  alt={`Slideshow Image ${currentImageIndex + 1}`}
+                  className="w-full h-full object-cover rounded-xl transition-opacity duration-500 ease-in-out"
+                  onError={(e) => {
+                    e.target.src = '/images/placeholder.jpg';
+                  }}
+                />
+              ) : (
+                <p className="text-gray-500 text-sm sm:text-base">No images available</p>
+              )}
+            </div>
+            <div className="flex justify-center mt-2 space-x-2">
+              {images &&
+                images.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
+                      currentImageIndex === index ? 'bg-blue-400 scale-125' : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+            </div>
+          </div>
+
+          {/* Featured Category Section */}
+          <div className="md:w-1/2 px-2 sm:px-4 mb-6 md:mb-0 lg:ml-7 order-2 md:order-1">
+            <h1 className="text-xl sm:text-2xl font-extrabold mb-4 md:mt-4 mt-4 mx-auto sm:ml-7 md:ml-16 bg-gradient-to-r from-blue-600 via-teal-500 to-green-600 bg-clip-text text-transparent tracking-tight relative group animate-water-flow text-center sm:text-left">
+              <span className="absolute -bottom-1 w-full h-1 bg-gradient-to-r from-blue-500 to-green-500 transform scale-x-110 group-hover:scale-x-105 transition-transform duration-300 ease-in-out hidden sm:block -ml-9"></span>
               Featured Category
             </h1>
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
               {displayCategories.map((item, index) => (
                 <InertiaLink
                   key={index}
@@ -342,11 +371,11 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                     colors[index % colors.length].split('-')[1]
                   }-300 hover:to-${
                     colors[(index + 1) % colors.length].split('-')[1]
-                  }-400 shadow-lg rounded-lg p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl group`}
+                  }-400 shadow-lg rounded-lg p-3 sm:p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-110 hover:shadow-2xl group`}
                 >
                   <div className="flex flex-col items-center justify-center">
                     {renderIcon(item.icon)}
-                    <h2 className="text-sm font-bold transition-colors duration-300 text-black group-hover:text-gray-700">
+                    <h2 className="text-xs sm:text-sm font-bold transition-colors duration-300 text-black group-hover:text-gray-700">
                       {item.name}
                     </h2>
                   </div>
@@ -354,43 +383,18 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
               ))}
             </div>
           </div>
-
-          <div className="md:w-2/3 pl-4 lg:mt- md:mt-4 sd:mt-2 lg:mr-7">
-            <div className="bg-white shadow-md rounded-xl border border-gray-100 h-48 md:h-96 flex items-center justify-center overflow-hidden relative">
-              {images && images.length > 0 ? (
-                <img
-                  src={images[currentImageIndex]?.url}
-                  alt={`Slideshow Image ${currentImageIndex + 1}`}
-                  className="w-full h-full object-cover rounded-xl transition-opacity duration-500 ease-in-out"
-                  onError={(e) => {
-                    e.target.src = '/images/placeholder.jpg';
-                  }}
-                />
-              ) : (
-                <p className="text-gray-500">No images available</p>
-              )}
-            </div>
-            <div className="flex justify-center mt-2 space-x-2">
-              {images && images.map((_, index) => (
-                <div
-                  key={index}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    currentImageIndex === index ? 'bg-blue-400 scale-125' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Featured Products */}
-        <h1 className="text-2xl font-bold text-center mb-6 mt-0">Featured Products</h1>
-        {featuredProducts && featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
+
+        <h1 className="text-xl sm:text-2xl font-bold text-center mb-4 sm:mb-6 text-gray-800">Featured Products</h1>
+
+{featuredProducts && featuredProducts.length > 0 ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mb-8 sm:mb-12 mx-2 sm:mx-7">
             {featuredProducts.map((product, index) => (
               <div
                 key={product.id || index}
-                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative"
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-3 sm:p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[240px] sm:min-h-[310px] flex flex-col justify-end relative"
               >
                 {product.is_offered_product === 'yes' && product.discount_value ? (
                   <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -398,7 +402,7 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                   </span>
                 ) : (
                   <div className="absolute top-2 left-2 animate-fire">
-                    <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
+                    <i className="fas fa-fire text-yellow-500 text-base sm:text-xl animate-pulse"></i>
                   </div>
                 )}
                 <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
@@ -406,14 +410,14 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                     <img
                       src={product.image}
                       alt={product.name}
-                      className={`w-full h-40 object-contain mb-2 rounded-md ${
+                      className={`w-full h-32 sm:h-48 object-contain mb-2 rounded-md ${
                         product.is_offered_product === 'yes' && product.discount_value ? 'mt-4' : ''
                       }`}
                       onError={() => handleImageError(product.id)}
                     />
                   ) : (
                     <div
-                      className={`w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm ${
+                      className={`w-full h-32 sm:h-48 flex items-center justify-center mb-2 text-gray-500 text-xs sm:text-sm ${
                         product.is_offered_product === 'yes' && product.discount_value ? 'mt-4' : ''
                       }`}
                     >
@@ -423,38 +427,40 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                 </InertiaLink>
                 <div className="mt-auto">
                   <InertiaLink href={`/product/${product.id}`}>
-                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                    <p className="ml-2 underline text-xs sm:text-sm font-medium mt-2 mb-2 text-black hover:text-blue-800 text-left line-clamp-3 h-16 sm:h-20 hyphens-auto">
                       {product.name}
-                    </h3>
+                    </p>
                   </InertiaLink>
-                  {product.is_offered_product === 'yes' && product.offer_price ? (
-                    <div className="flex flex-col items-center">
-                      <p className="text-gray-400 text-sm line-through tracking-wide">
-                        {parseFloat(product.price).toFixed(2)} Tk
-                      </p>
-                      <p className="text-lg font-bold text-red-600">
-                        {parseFloat(product.offer_price).toFixed(2)} Tk
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
-                  )}
+                  <div className="flex items-center justify-center gap-2">
+                    {product.is_offered_product === 'yes' && product.offer_price ? (
+                      <>
+                        <p className="text-gray-400 text-xs sm:text-sm line-through">
+                          {parseFloat(product.price).toFixed(2)} Tk
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-red-600">
+                          {parseFloat(product.offer_price).toFixed(2)} Tk
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 text-xs sm:text-sm">{parseFloat(product.price).toFixed(2)} Tk</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 mb-12">No featured products found</p>
+          <p className="text-center text-gray-500 mb-8 sm:mb-12 text-sm sm:text-base">No featured products found</p>
         )}
 
         {/* Special Offers Section */}
-        <h1 className="text-3xl font-extrabold text-center mb-8 tracking-tight text-gray-900">Special Offers</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-center mb-6 sm:mb-8 tracking-tight text-gray-900">Special Offers</h1>
         {specialOfferProducts && specialOfferProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mb-8 sm:mb-12 mx-2 sm:mx-7">
             {specialOfferProducts.map((product, index) => (
               <div
                 key={product.id || index}
-                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative group"
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-3 sm:p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[260px] sm:min-h-[310px] flex flex-col justify-end relative group"
               >
                 {product.is_special_offer === 'yes' && product.discount_value ? (
                   <span className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-full">
@@ -462,7 +468,7 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                   </span>
                 ) : (
                   <div className="absolute top-2 left-2 animate-fire">
-                    <i className="fas fa-fire text-yellow-500 text-xl animate-pulse"></i>
+                    <i className="fas fa-fire text-yellow-500 text-base sm:text-xl animate-pulse"></i>
                   </div>
                 )}
                 <InertiaLink href={`/product/${product.id}`} className="flex flex-col items-center">
@@ -470,14 +476,14 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                     <img
                       src={product.image}
                       alt={product.name}
-                      className={`w-full h-40 object-contain mb-2 rounded-md ${
+                      className={`w-full h-28 sm:h-40 object-contain mb-2 rounded-md ${
                         product.is_special_offer === 'yes' && product.discount_value ? 'mt-4' : ''
                       }`}
                       onError={() => handleImageError(product.id)}
                     />
                   ) : (
                     <div
-                      className={`w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm ${
+                      className={`w-full h-28 sm:h-40 flex items-center justify-center mb-2 text-gray-500 text-xs sm:text-sm ${
                         product.is_special_offer === 'yes' && product.discount_value ? 'mt-4' : ''
                       }`}
                     >
@@ -487,41 +493,43 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                 </InertiaLink>
                 <div className="mt-auto">
                   <InertiaLink href={`/product/${product.id}`}>
-                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                    <h3 className="text-xs sm:text-sm font-semibold mt-2 mb-2 text-black hover:text-blue-800 text-left line-clamp-3 h-16 hyphens-auto">
                       {product.name}
                     </h3>
                   </InertiaLink>
-                  {product.is_special_offer === 'yes' && product.offer_price ? (
-                    <div className="flex flex-col items-center">
-                      <p className="text-gray-400 text-sm line-through tracking-wide">
-                        {parseFloat(product.price).toFixed(2)} Tk
-                      </p>
-                      <p className="text-lg font-bold text-red-600">
-                        {parseFloat(product.offer_price).toFixed(2)} Tk
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
-                  )}
+                  <div className="flex items-center justify-center gap-2">
+                    {product.is_special_offer === 'yes' && product.offer_price ? (
+                      <>
+                        <p className="text-gray-400 text-xs sm:text-sm line-through">
+                          {parseFloat(product.price).toFixed(2)} Tk
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-red-600">
+                          {parseFloat(product.offer_price).toFixed(2)} Tk
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 text-xs sm:text-sm">{parseFloat(product.price).toFixed(2)} Tk</p>
+                    )}
+                  </div>
                 </div>
-                <button className="mt-4 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 px-4 py-2 rounded-full">
+                <button className="mt-4 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-red-500 to-pink-500 px-3 sm:px-4 py-1 sm:py-2 rounded-full">
                   Shop Now
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 mb-12">No special offer products found</p>
+          <p className="text-center text-gray-500 mb-8 sm:mb-12 text-sm sm:text-base">No special offer products found</p>
         )}
 
         {/* New Arrivals Section */}
-        <h1 className="text-2xl font-bold text-center mb-6 text-gray-800">New Arrivals</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-center mb-6 text-gray-800">New Arrivals</h1>
         {newArrivalProducts && newArrivalProducts.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 mb-12 ml-7 mr-7">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mb-8 sm:mb-12 mx-2 sm:mx-7">
             {newArrivalProducts.map((product, index) => (
               <div
                 key={product.id || index}
-                className="bg-white shadow-lg rounded-lg border border-gray-200 p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[310px] flex flex-col justify-end relative group"
+                className="bg-white shadow-lg rounded-lg border border-gray-200 p-3 sm:p-4 text-center transform transition-all duration-300 ease-in-out hover:scale-102 hover:shadow-xl min-h-[260px] sm:min-h-[310px] flex flex-col justify-end relative group"
               >
                 <span className="absolute top-2 right-2 bg-gradient-to-r from-teal-400 to-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full">
                   New Arrival
@@ -531,42 +539,44 @@ function Home({ auth, images, categories, category, featuredProducts, specialOff
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-40 object-contain mb-2 rounded-md mt-4"
+                      className="w-full h-28 sm:h-40 object-contain mb-2 rounded-md mt-4"
                       onError={() => handleImageError(product.id)}
                     />
                   ) : (
-                    <div className="w-full h-40 flex items-center justify-center mb-2 text-gray-500 text-sm mt-4">
+                    <div className="w-full h-28 sm:h-40 flex items-center justify-center mb-2 text-gray-500 text-xs sm:text-sm mt-4">
                       No image available
                     </div>
                   )}
                 </InertiaLink>
                 <div className="mt-auto">
                   <InertiaLink href={`/product/${product.id}`}>
-                    <h3 className="text-sm font-semibold mb-2 text-black hover:text-blue-800">
+                    <h3 className="text-xs sm:text-sm font-semibold mt-2 mb-2 text-black hover:text-blue-800 text-left line-clamp-3 h-16 hyphens-auto">
                       {product.name}
                     </h3>
                   </InertiaLink>
-                  {product.is_offered_product === 'yes' && product.offer_price ? (
-                    <div className="flex flex-col items-center">
-                      <p className="text-gray-400 text-sm line-through tracking-wide">
-                        {parseFloat(product.price).toFixed(2)} Tk
-                      </p>
-                      <p className="text-lg font-bold text-red-600">
-                        {parseFloat(product.offer_price).toFixed(2)} Tk
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-600">{parseFloat(product.price).toFixed(2)} Tk</p>
-                  )}
+                  <div className="flex items-center justify-center gap-2">
+                    {product.is_offered_product === 'yes' && product.offer_price ? (
+                      <>
+                        <p className="text-gray-400 text-xs sm:text-sm line-through">
+                          {parseFloat(product.price).toFixed(2)} Tk
+                        </p>
+                        <p className="text-xs sm:text-sm font-bold text-red-600">
+                          {parseFloat(product.offer_price).toFixed(2)} Tk
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 text-xs sm:text-sm">{parseFloat(product.price).toFixed(2)} Tk</p>
+                    )}
+                  </div>
                 </div>
-                <button className="mt-4 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-purple-600 px-4 py-2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hover:from-teal-600 hover:to-purple-700">
+                <button className="mt-4 text-xs sm:text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-purple-600 px-3 sm:px-4 py-1 sm:py-2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 hover:from-teal-600 hover:to-purple-700">
                   Shop Now
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-center text-gray-500 mb-12">No new arrival products found</p>
+          <p className="text-center text-gray-500 mb-8 sm:mb-12 text-sm sm:text-base">No new arrival products found</p>
         )}
       </main>
       <Footer />

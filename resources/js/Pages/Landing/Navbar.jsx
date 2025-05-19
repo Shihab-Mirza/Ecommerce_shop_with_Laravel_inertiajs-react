@@ -293,72 +293,51 @@ function Navbar({ auth, categories }) {
                                 </button>
                             </div>
 
-                            {/* Auth Buttons */}
-                            <div className="flex gap-4">
-                                {auth.user ? (
-                                    <>
-                                        <Link
-                                            href="/profile"
-                                            className={authButtonStyles}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            <FontAwesomeIcon icon={faUserPlus} /> Profile
-                                        </Link>
-                                        <Link
-                                            href="/logout"
-                                            method="post"
-                                            className={authButtonStyles}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                        >
-                                            <FontAwesomeIcon icon={faSignOutAlt} /> Logout
-                                        </Link>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={toggleLoginModal}
-                                            className={authButtonStyles}
-                                        >
-                                            <FontAwesomeIcon icon={faSignInAlt} /> Login
-                                        </button>
-                                        <button
-                                            onClick={toggleRegistrationModal}
-                                            className={authButtonStyles}
-                                        >
-                                            <FontAwesomeIcon icon={faUserPlus} /> Register
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+{/* Auth Buttons */}
+<div className="flex gap-1">
+    {auth.user ? (
+        <>
+            <Link
+                href="/profile"
+                className={`${authButtonStyles} h-16 px-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 ease-in-out flex items-center gap-0 font-semibold text-base`}
+                onClick={() => setMobileMenuOpen(false)}
+            >
+                <FontAwesomeIcon icon={faUserPlus} />
+                Profile
+            </Link>
+            <Link
+                href="/logout"
+                method="post"
+                className={`${authButtonStyles} h-16 px-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 ease-in-out flex items-center gap-2 font-semibold text-base`}
+                onClick={() => setMobileMenuOpen(false)}
+            >
+                <FontAwesomeIcon icon={faSignOutAlt} />
+                Logout
+            </Link>
+        </>
+    ) : (
+        <>
+            <button
+                onClick={toggleLoginModal}
+                className={`${authButtonStyles} h-16 px-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 ease-in-out flex items-center gap-2 font-semibold text-base`}
+            >
+                <FontAwesomeIcon icon={faSignInAlt} />
+                Login
+            </button>
+            <button
+                onClick={toggleRegistrationModal}
+                className={`${authButtonStyles} h-16 px-6 rounded-2xl shadow-md hover:shadow-lg transition duration-300 ease-in-out flex items-center gap-2 font-semibold text-base`}
+            >
+                <FontAwesomeIcon icon={faUserPlus} />
+                Register
+            </button>
+        </>
+    )}
+</div>
 
-                            {/* Search, Cart, Wishlist */}
-                            <div className="flex flex-col space-y-2 mt-4">
-                                <button
-                                    onClick={toggleSearch}
-                                    className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2"
-                                >
-                                    <FontAwesomeIcon icon={faSearch} /> Search
-                                </button>
-                                <button
-                                    onClick={toggleCartModal}
-                                    className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2"
-                                >
-                                    <FontAwesomeIcon icon={faShoppingCart} /> Cart
-                                    <span className="ml-2 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                                        {cartCount}
-                                    </span>
-                                </button>
-                                <button
-                                    onClick={handleWishlistClick}
-                                    className="px-4 py-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition duration-300 flex items-center gap-2"
-                                >
-                                    <FontAwesomeIcon icon={faHeart} /> Wishlist
-                                </button>
-                            </div>
 
                             {/* Categories */}
                             <div className="mt-4">
-                                <h3 className="text-lg font-semibold text-gray-100 mb-2">Categories</h3>
                                 {categories?.length ? (
                                     <ul className="space-y-2">
                                         {categories.map((category) => (

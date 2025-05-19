@@ -87,12 +87,10 @@
 
         <tbody>
 
-            @foreach ($orders as $order)
                 <tr>
                     <td>{{ $order_count  }}</td>
                     <td>{{ $total_amount}} Taka</td>
                 </tr>
-            @endforeach
         </tbody>
     </table>
 

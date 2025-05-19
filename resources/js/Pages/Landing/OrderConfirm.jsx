@@ -10,19 +10,19 @@ function OrderConfirm({ auth, categories, orderItems, order_token, orderId, tota
         <>
             <Head title="Order Confirmation" />
             <NavBar auth={auth} categories={categories} />
-            <main className="bg-gray-100 min-h-screen py-12">
+            <main className="bg-gray-100 min-h-screen py-4">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-12">
-                        <p className="mt-4 text-lg text-gray-600">
-                            Complete your purchase with our secure payment process
-                        </p>
-                        <p className="mt-2 text-md text-gray-700">
-                            Order ID: <span className="font-semibold">#{orderid}</span>
-                        </p>
-                    </div>
+                    <div className="bg-white rounded-lg shadow-md p-6 mb-1">
+                        <div className="text-center mb-6">
+                            <p className="text-lg text-gray-600">
+                                Complete your purchase with our secure payment process
+                            </p>
+                            <p className="mt-2 text-md text-gray-700">
+                                Order ID: <span className="font-semibold">#{orderid}</span>
+                            </p>
+                        </div>
+                                                <h4 className="text-lg font-semibold text-gray-700 mb-6">Order Summary</h4>
 
-                    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-                        <h4 className="text-lg font-semibold text-gray-700 mb-6">Order Summary</h4>
                         {orderItems.length === 0 ? (
                             <p className="text-gray-500 text-center">Your order is empty.</p>
                         ) : (

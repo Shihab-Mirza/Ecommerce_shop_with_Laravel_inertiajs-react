@@ -29,7 +29,7 @@ public function add(Request $request, $productId)
 
     if ($existingWishlist) {
 
-        return redirect()->back()->with('flash', ['error' => 'Product is already in your wishlist.']);
+          return back()->withErrors(['error'=> 'Product is already in your wishlist.']);
     }
 else {
     // Add to wishlist
@@ -38,7 +38,7 @@ else {
         'product_id' => $productId,
     ]);
 
-    return redirect()->back()->with('flash', ['success' => 'Product added to wishlist successfully!']); }
+    return back()->with('success', "Product added to wishlist successfully!"); }
 }
     public function index()
     {
@@ -63,7 +63,6 @@ else {
             });
 
         return Inertia::render('Landing/ViewWishlist', [
-            'auth' => ['user' => $user],
             'wishlistItems' => $wishlistItems,
 
         ]);
