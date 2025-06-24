@@ -7,7 +7,7 @@ import AdminSidebar from './AdminSidebar';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount, productCount, totalSales }) => {
+const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount, productCount, totalSales, chartData }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
@@ -36,22 +36,30 @@ const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount,
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
-    const chartData = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    const chartConfig = {
+        labels: chartData.labels, // e.g., ['Jun 2024', 'Jul 2024', ..., 'May 2025']
         datasets: [
             {
-                label: 'Revenue ($)',
-                data: [5000, 7000, 8000, 6000, 9000, 10000, 11000, 9500, 8500, 7500, 6500, 12000],
+                label: 'Revenue (tk)',
+                data: chartData.revenues,
                 backgroundColor: 'rgba(54, 162, 235, 0.8)',
                 borderColor: 'rgba(54, 162, 235, 1)',
                 borderWidth: 1,
+                yAxisID: 'y-revenue',
+                barThickness: 10,
+                categoryPercentage: 0.35,
+                barPercentage: 0.85,
             },
             {
                 label: 'Orders',
-                data: [50, 70, 80, 60, 90, 100, 110, 95, 85, 75, 65, 120],
+                data: chartData.orderCounts,
                 backgroundColor: 'rgba(255, 159, 64, 0.8)',
                 borderColor: 'rgba(255, 159, 64, 1)',
                 borderWidth: 1,
+                yAxisID: 'y-orders',
+                barThickness: 10,
+                categoryPercentage: 0.35,
+                barPercentage: 0.85,
             },
         ],
     };
@@ -65,9 +73,21 @@ const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount,
             },
             title: {
                 display: true,
-                text: 'Monthly Revenue and Orders',
+                text: 'Monthly Revenue and Orders (Last 12 Months)',
                 color: isDarkMode ? '#ffffff' : '#374151',
                 font: { size: 18 },
+            },
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        const label = context.dataset.label || '';
+                        const value = context.parsed.y;
+                        if (context.dataset.yAxisID === 'y-revenue') {
+                            return `${label}: ${value.toLocaleString()} tk`;
+                        }
+                        return `${label}: ${value}`;
+                    },
+                },
             },
         },
         scales: {
@@ -75,9 +95,45 @@ const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount,
                 ticks: { color: isDarkMode ? '#ffffff' : '#374151' },
                 grid: { color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
             },
-            y: {
-                ticks: { color: isDarkMode ? '#ffffff' : '#374151' },
-                grid: { color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' },
+            'y-revenue': {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                    display: true,
+                    text: 'Revenue (tk)',
+                    color: isDarkMode ? '#ffffff' : '#374151',
+                },
+                ticks: {
+                    color: isDarkMode ? '#ffffff' : '#374151',
+                    callback: function (value) {
+                        return value.toLocaleString();
+                    },
+                },
+                grid: {
+                    color: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+                },
+                suggestedMax: Math.max(...chartData.revenues, 1000) * 1.2,
+            },
+            'y-orders': {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                    display: true,
+                    text: 'Orders',
+                    color: isDarkMode ? '#ffffff' : '#374151',
+                },
+                ticks: {
+                    color: isDarkMode ? '#ffffff' : '#374151',
+                    stepSize: 1,
+                    beginAtZero: true,
+                },
+                grid: {
+                    drawOnChartArea: false,
+                },
+                min: 0,
+                suggestedMax: Math.max(30, Math.max(...chartData.orderCounts) * 2), // Increased to 30 for smaller bars
             },
         },
     };
@@ -90,14 +146,14 @@ const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount,
             transition: {
                 delay: i * 0.2,
                 duration: 0.5,
-                ease: "easeOut"
-            }
-        })
+                ease: "easeOut",
+            },
+        }),
     };
 
     const dashboardCards = [
         { title: "Total Sales", value: `${totalSales} tk`, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
-        { title: "Orders", value: orderCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
+        { title: "Completed Orders", value: orderCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
         { title: "Products", value: productCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
         { title: "Customers", value: userCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
         { title: "Brands", value: brandCount, gradient: "from-blue-400 to-indigo-500", darkGradient: "from-blue-600 to-purple-600" },
@@ -159,7 +215,7 @@ const Dashboard = ({ auth, userCount, brandCount, orderCount, pendingOrderCount,
                             ))}
                         </div>
                         <div className="bg-opacity-50 rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6">
-                            <Bar data={chartData} options={chartOptions} />
+                            <Bar data={chartConfig} options={chartOptions} />
                         </div>
                     </div>
                 </main>

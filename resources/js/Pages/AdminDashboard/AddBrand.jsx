@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaSave, FaEdit, FaTrash } from 'react-icons/fa';
 
 const Modal = ({ isOpen, onClose, onConfirm, message }) => {
   if (!isOpen) return null;
@@ -9,7 +10,7 @@ const Modal = ({ isOpen, onClose, onConfirm, message }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 transition-opacity duration-300">
       <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-100">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">{message}</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-6">{message}</h3>
         <div className="flex justify-end space-x-4">
           <button
             onClick={onClose}
@@ -156,7 +157,7 @@ const AddBrand = ({ auth, categories: initialCategories, subcategories: initialS
         onSuccess: () => {
           setValidationErrors({});
           setSuccessMessage('Brand deleted successfully!');
-          setBrands(brands.filter((b) => b.id !== selectedBrandId));
+          setBrands(brands.filter((b) => b.id));
           setIsModalOpen(false);
           setSelectedBrandId(null);
           setIsProductsOpen(true);
@@ -289,90 +290,114 @@ const AddBrand = ({ auth, categories: initialCategories, subcategories: initialS
             <div>
               <h3 className="text-lg sm:text-xl font-semibold mb-4">Existing Brands</h3>
               {brands.length > 0 ? (
-                <ul className="space-y-3">
-                  {brands.map((brand, index) => (
-                    <li
-                      key={brand.id}
-                      className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} flex items-center justify-between`}
-                    >
-                      <div className="flex-1 flex items-center gap-3">
-                        <span className="font-semibold">{index + 1}.</span>
-                        {editingBrandId === brand.id ? (
-                          <div className="flex flex-col sm:flex-row gap-2 w-full">
-                            <input
-                              type="text"
-                              value={editedBrandName}
-                              onChange={(e) => setEditedBrandName(e.target.value)}
-                              className={`flex-1 p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            />
-                            <select
-                              value={editedCategoryId}
-                              onChange={(e) => {
-                                setEditedCategoryId(e.target.value);
-                                setEditedSubcategoryId("");
-                              }}
-                              className={`flex-1 p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                            >
-                              <option value="">Select Category</option>
-                              {initialCategories.map((category) => (
-                                <option key={category.id} value={category.id}>
-                                  {category.name}
-                                </option>
-                              ))}
-                            </select>
-                            <select
-                              value={editedSubcategoryId}
-                              onChange={(e) => setEditedSubcategoryId(e.target.value)}
-                              className={`flex-1 p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                              disabled={!editedCategoryId}
-                            >
-                              <option value="">Select Subcategory</option>
-                              {initialSubcategories.filter((sub) => sub.category_id === parseInt(editedCategoryId)).map((subcategory) => (
-                                <option key={subcategory.id} value={subcategory.id}>
-                                  {subcategory.sub_category_name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        ) : (
-                          <span>
-                            {brand.brand_name} (Category: {initialCategories.find((cat) => cat.id === brand.category_id)?.name || 'N/A'},
-                            Subcategory: {initialSubcategories.find((sub) => sub.id === brand.subcategory_id)?.sub_category_name || 'N/A'})
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleUpdate(brand)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-300`}
+                        <div className="overflow-x-auto rounded-lg shadow-md">
+                            <table className={`w-full text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                      <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                      <tr>
+                        <th className="px-3 py-3 text-left text-sm font-semibold">S.No</th>
+                        <th className="px-3 py-3 text-left text-sm font-semibold">Brand</th>
+                        <th className="px-3 py-3 text-left text-sm font-semibold">Subcategory</th>
+                        <th className="px-3 py-3 text-left text-sm font-semibold">Category</th>
+                        <th className="px-3 py-3 text-right text-sm font-semibold">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {brands.map((brand, index) => (
+                        <tr
+                          key={brand.id}
+                          className={`border-t ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}
                         >
-                          {editingBrandId === brand.id ? 'Save' : 'Edit'}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(brand.id)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-300`}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                          <td className="px-4 py-2 text-sm">{index + 1}.</td>
+                          <td className="px-4 py-2 text-sm">
+                            {editingBrandId === brand.id ? (
+                              <input
+                                type="text"
+                                value={editedBrandName}
+                                onChange={(e) => setEditedBrandName(e.target.value)}
+                                className={`w-full p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              />
+                            ) : (
+                              brand.brand_name
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            {editingBrandId === brand.id ? (
+                              <select
+                                value={editedSubcategoryId}
+                                onChange={(e) => setEditedSubcategoryId(e.target.value)}
+                                className={`w-full p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                disabled={!editedCategoryId}
+                              >
+                                <option value="">Select Subcategory</option>
+                                {initialSubcategories.filter((sub) => sub.category_id === parseInt(editedCategoryId)).map((subcategory) => (
+                                  <option key={subcategory.id} value={subcategory.id}>
+                                    {subcategory.sub_category_name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              initialSubcategories.find((sub) => sub.id === brand.subcategory_id)?.sub_category_name || 'N/A'
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            {editingBrandId === brand.id ? (
+                              <select
+                                value={editedCategoryId}
+                                onChange={(e) => {
+                                  setEditedCategoryId(e.target.value);
+                                  setEditedSubcategoryId("");
+                                }}
+                                className={`w-full p-2 rounded-lg ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-white text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              >
+                                <option value="">Select Category</option>
+                                {initialCategories.map((category) => (
+                                  <option key={category.id} value={category.id}>
+                                    {category.name}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              initialCategories.find((cat) => cat.id === brand.category_id)?.name || 'N/A'
+                            )}
+                          </td>
+                          <td className="px-4 py-2 text-right">
+                            <div className="flex gap-2 justify-end">
+                              <button
+                                onClick={() => handleUpdate(brand)}
+                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                                title={editingBrandId === brand.id ? 'Save' : 'Edit'}
+                              >
+                                {editingBrandId === brand.id ? <FaSave /> : <FaEdit />}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(brand.id)}
+                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-200`}
+                                title="Delete"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <p className="text-gray-500">No brands found.</p>
               )}
             </div>
-          </div>
-        </main>
+             </div>
+          </main>
+        </div>
+        <Modal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onConfirm={handleConfirmDelete}
+          message="Are you sure you want to delete this brand?"
+        />
       </div>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onConfirm={handleConfirmDelete}
-        message="Are you sure you want to delete this brand?"
-      />
-    </div>
-  );
+    );
 };
 
 export default AddBrand;

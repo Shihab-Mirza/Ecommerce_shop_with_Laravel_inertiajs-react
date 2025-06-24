@@ -1,12 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
-import React from 'react';
-import Navbar from './Navbar';
-import Footer from './Footer';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faShoppingCart, faHeart, faSignOutAlt, faCoins } from '@fortawesome/free-solid-svg-icons';
+import Navbar from './Navbar';
+import Footer from './Footer';
+import CartModal from './CartModal';
 import { useForm } from '@inertiajs/react';
 
-export default function UserProfile({ auth, categories, userPoints = 0 }) {
+export default function UserProfile({ auth, categories, userPoints = 0, cartItems, cartCount, cartId, checkoutToken }) {
   const {
     data,
     setData,
@@ -24,6 +25,25 @@ export default function UserProfile({ auth, categories, userPoints = 0 }) {
   });
 
   const resendForm = useForm();
+  const [cartModalOpen, setCartModalOpen] = useState(false);
+  const [localCartItems, setLocalCartItems] = useState(cartItems || []);
+  const [localCartCount, setLocalCartCount] = useState(cartCount || 0);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+
+  // Sync cart items and count with props
+  useEffect(() => {
+    setLocalCartItems(cartItems || []);
+    setLocalCartCount(cartCount || 0);
+  }, [cartItems, cartCount]);
+
+  // Toggle cart modal
+  const toggleCartModal = () => {
+    setCartModalOpen((prev) => !prev);
+  };
+
+  const openLoginModal = () => {
+    // Placeholder for login modal trigger, passed to Navbar or CartModal if needed
+  };
 
   const updateProfile = (e) => {
     e.preventDefault();
@@ -48,9 +68,43 @@ export default function UserProfile({ auth, categories, userPoints = 0 }) {
 
   return (
     <>
-      <Head title="User Profile - MyShop" />
-      <Navbar auth={auth} categories={categories} />
-      <main className="container mx-auto px-4 py-8 min-h-screen bg-gray-50">
+      <Head title="User Profile" />
+      <Navbar
+        auth={auth}
+        categories={categories}
+        cartCount={localCartCount}
+        toggleCartModal={toggleCartModal}
+        setPendingCheckout={setPendingCheckout}
+        cartId={cartId}
+        checkoutToken={checkoutToken}
+      />
+      <main className="container mx-auto px-4 py-8 min-h-screen bg-gray-50 relative">
+        {/* Floating Cart Icon */}
+        <button
+          onClick={toggleCartModal}
+          className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-40 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        >
+          <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+              {localCartCount}
+            </span>
+        </button>
+
+        {/* Cart Modal */}
+        <CartModal
+          isOpen={cartModalOpen}
+          toggleCartModal={toggleCartModal}
+          cartItems={localCartItems}
+          cartCount={localCartCount}
+          setCartItems={setLocalCartItems}
+          setCartCount={setLocalCartCount}
+          auth={auth}
+          cartId={cartId}
+          checkoutToken={checkoutToken}
+          setPendingCheckout={setPendingCheckout}
+          openLoginModal={openLoginModal}
+        />
+
         <div className="flex flex-col lg:flex-row gap-6 md:gap-8">
           {/* Sidebar */}
           <aside className="lg:w-1/4 bg-white rounded-2xl shadow-lg p-4 sm:p-6">

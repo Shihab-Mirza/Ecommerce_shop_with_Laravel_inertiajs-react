@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Offer;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Carbon\Carbon;
 
 class OfferController extends Controller
 {
@@ -14,7 +15,7 @@ class OfferController extends Controller
         $perPage = 20;
         $search = $request->input('search', '');
 
-        $productsQuery = Product::with(['offer', 'category', 'subcategory', 'brand'])
+        $productsQuery = Product::withoutGlobalScopes()->with(['offer', 'category', 'subcategory', 'brand'])
             ->when($search, function ($query, $search) {
                 return $query->where('name', 'like', "%{$search}%")
                     ->orWhere('product_code', 'like', "%{$search}%")
@@ -57,18 +58,12 @@ class OfferController extends Controller
                     }
                 },
             ],
-            'offer.start_date' => [
-                'nullable',
-                'date',
-                'required_if:offer.discount_type,fixed',
-            ],
             'offer.end_date' => [
                 'nullable',
                 'date',
                 'required_if:offer.discount_type,fixed',
-                'after_or_equal:offer.start_date',
+                'after_or_equal:today',
             ],
-            'offer.is_active' => 'required|in:yes,no',
         ]);
 
         $product = Product::findOrFail($request->id);
@@ -99,9 +94,8 @@ class OfferController extends Controller
             'discount_type' => $request->offer['discount_type'],
             'offer_price' => $request->offer['offer_price'] ? floatval($request->offer['offer_price']) : null,
             'discount_value' => $discountValue,
-            'is_active' => $request->offer['is_active'],
-            'start_date' => $request->offer['discount_type'] === 'unlimited' ? null : $request->offer['start_date'],
-            'end_date' => $request->offer['discount_type'] === 'unlimited' ? null : $request->offer['end_date'],
+            'start_date' => $request->offer['discount_type'] === 'unlimited' ? null : Carbon::now(),
+            'end_date' => $request->offer['discount_type'] === 'unlimited' ? null : Carbon::parse($request->offer['end_date'])->setTimeFrom(Carbon::now()),
         ];
 
         // Update or create offer

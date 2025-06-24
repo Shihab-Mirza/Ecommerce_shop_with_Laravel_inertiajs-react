@@ -18,26 +18,17 @@ class Offer extends Model
         'discount_value',
         'start_date',
         'end_date',
-        'is_active',
     ];
 
 
     protected $casts = [
-        'is_active' => 'string', // Ensure is_active is treated as a string
-        'start_date' => 'date',
-        'end_date' => 'date',
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
     ];
     public function product()
     {
         return $this->belongsTo(Product::class, 'product_id', 'id');
     }
 
-    // Check if offer is currently valid
-    public function isValid()
-    {
-        $now = now();
-        return $this->is_active &&
-               $this->start_date <= $now &&
-               $this->end_date >= $now;
-    }
+
 }

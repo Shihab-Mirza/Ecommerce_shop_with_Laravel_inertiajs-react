@@ -141,7 +141,7 @@ const ViewDeliveredOrderItem = ({ auth, orderItems, orderId, flash }) => {
 
                         <div className="mt-6">
                             <button
-                                onClick={() => Inertia.get('/view_orders')}
+                                onClick={() => Inertia.get('/view_delivered_orders')}
                                 className={`py-2 px-4 rounded-lg text-sm font-semibold text-white ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} transition-all duration-200`}
                             >
                                 Back to Delivered Orders

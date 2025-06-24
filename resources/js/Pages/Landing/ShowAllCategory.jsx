@@ -1,16 +1,36 @@
 import { Head, Link } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLayerGroup, faCube, faSearch, faShoppingCart } from '@fortawesome/free-solid-svg-icons';
 import NavBar from './Navbar';
 import Footer from './Footer';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLayerGroup, faCube, faSearch } from '@fortawesome/free-solid-svg-icons';
+import CartModal from './CartModal';
 
-export default function ShowAllCategory({ auth, categories }) {
+export default function ShowAllCategory({ auth, categories, cartItems, cartCount, cartId, checkoutToken }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [cartModalOpen, setCartModalOpen] = useState(false);
+  const [localCartItems, setLocalCartItems] = useState(cartItems || []);
+  const [localCartCount, setLocalCartCount] = useState(cartCount || 0);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
 
   // Handle search input change
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
+  };
+
+  // Sync cart items and count with props
+  useEffect(() => {
+    setLocalCartItems(cartItems || []);
+    setLocalCartCount(cartCount || 0);
+  }, [cartItems, cartCount]);
+
+  // Toggle cart modal
+  const toggleCartModal = () => {
+    setCartModalOpen((prev) => !prev);
+  };
+
+  const openLoginModal = () => {
+    // Placeholder for login modal trigger, passed to Navbar or CartModal if needed
   };
 
   // Filter categories, subcategories, and brands based on search term
@@ -30,8 +50,42 @@ export default function ShowAllCategory({ auth, categories }) {
   return (
     <>
       <Head title="All Categories" />
-      <NavBar auth={auth} categories={categories} />
-      <div className="container mx-auto px-4 py-12 bg-white min-h-screen">
+      <NavBar
+        auth={auth}
+        categories={categories}
+        cartCount={localCartCount}
+        toggleCartModal={toggleCartModal}
+        setPendingCheckout={setPendingCheckout}
+        cartId={cartId}
+        checkoutToken={checkoutToken}
+      />
+      <div className="container mx-auto px-4 py-12 bg-white min-h-screen relative">
+        {/* Floating Cart Icon */}
+        <button
+          onClick={toggleCartModal}
+          className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-40 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        >
+          <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+              {localCartCount}
+            </span>
+        </button>
+
+        {/* Cart Modal */}
+        <CartModal
+          isOpen={cartModalOpen}
+          toggleCartModal={toggleCartModal}
+          cartItems={localCartItems}
+          cartCount={localCartCount}
+          setCartItems={setLocalCartItems}
+          setCartCount={setLocalCartCount}
+          auth={auth}
+          cartId={cartId}
+          checkoutToken={checkoutToken}
+          setPendingCheckout={setPendingCheckout}
+          openLoginModal={openLoginModal}
+        />
+
         {/* Search Input */}
         <div className="mb-8">
           <div className="relative max-w-lg mx-auto">
@@ -50,7 +104,7 @@ export default function ShowAllCategory({ auth, categories }) {
         </div>
 
         {(!filteredCategories || filteredCategories.length === 0) ? (
-          <p className="text-black rose-500 font-medium text-lg">No results found.....</p>
+          <p className="text-black font-medium text-lg">No results found...</p>
         ) : (
           <div className="columns-1 md:columns-2 lg:columns-3 gap-8">
             {filteredCategories.map((category) => (
@@ -70,17 +124,17 @@ export default function ShowAllCategory({ auth, categories }) {
                 {category.subcategories && category.subcategories.length > 0 ? (
                   <div className="mb-6">
                     {category.subcategories
-                      .filter((subcategory) =>
-                        subcategory.sub_category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        subcategory.brands?.some((brand) =>
-                          brand.brand_name.toLowerCase().includes(searchTerm.toLowerCase())
-                        ) ||
-                        category.name.toLowerCase().includes(searchTerm.toLowerCase())
+                      .filter(
+                        (subcategory) =>
+                          subcategory.sub_category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          subcategory.brands?.some((brand) =>
+                            brand.brand_name.toLowerCase().includes(searchTerm.toLowerCase())
+                          ) ||
+                          category.name.toLowerCase().includes(searchTerm.toLowerCase())
                       )
                       .map((subcategory) => (
                         <div key={subcategory.id} className="ml-4 mb-4">
                           <h4 className="text-base font-medium text-gray-600 flex items-center">
-
                             <Link
                               href={route('products.by.subcategory', subcategory.id)}
                               className="hover:underline text-black"
@@ -92,10 +146,11 @@ export default function ShowAllCategory({ auth, categories }) {
                             <div className="ml-4">
                               <ul className="list-none pl-0">
                                 {subcategory.brands
-                                  .filter((brand) =>
-                                    brand.brand_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    subcategory.sub_category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    category.name.toLowerCase().includes(searchTerm.toLowerCase())
+                                  .filter(
+                                    (brand) =>
+                                      brand.brand_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                      subcategory.sub_category_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                      category.name.toLowerCase().includes(searchTerm.toLowerCase())
                                   )
                                   .map((brand) => (
                                     <li

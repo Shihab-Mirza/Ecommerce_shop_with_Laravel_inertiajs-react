@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import "../../css/style.scss";
 import React from 'react';
-import NavBar from '../Components/NavBar';
-import Footer from '../Components/Footer';
+import NavBar from '../components/NavBar';
+import Footer from '../components/Footer';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faKeyboard, faMouse, faHeadphones, faDesktop, faCamera, faVolumeUp, faMicrochip, faPrint, faGamepad, faNetworkWired, faLaptop, faMobileAlt, faHeadphonesAlt } from '@fortawesome/free-solid-svg-icons';
 

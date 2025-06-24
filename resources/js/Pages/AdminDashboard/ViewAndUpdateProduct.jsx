@@ -108,14 +108,14 @@ const ViewAndUpdateProduct = ({ auth, errors: initialErrors, flash, product, cat
         formData.append('is_featured', isFeatured);
         formData.append('is_special_offer', isSpecialOffer);
         if (productImage) formData.append('image', productImage);
-        formData.append('_method', 'PUT');
+        formData.append('_method', 'put');
 
         specifications.forEach((spec, index) => {
             formData.append(`spec_name_${index + 1}`, spec.name);
             formData.append(`spec_detail_${index + 1}`, spec.detail);
         });
 
-        Inertia.post(`/products/${product.id}`, formData, {
+        Inertia.post(`/update_product/${product.id}`, formData, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: (page) => {

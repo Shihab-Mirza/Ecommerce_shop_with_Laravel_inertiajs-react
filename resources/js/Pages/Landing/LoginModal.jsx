@@ -4,10 +4,17 @@ import { useForm } from '@inertiajs/react';
 function LoginModal({ closeModal, toggleToRegistrationModal }) {
     const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-    const { data, setData, post, errors, processing, reset } = useForm({
+    const { data, setData, post, errors, processing, reset, clearErrors } = useForm({
         email: '',
         password: '',
     });
+
+    // Helper function to toggle forgot password and clear errors
+    const toggleForgotPassword = (show) => {
+        setShowForgotPassword(show);
+        clearErrors(); // Clear all errors when switching forms
+        reset(); // Reset form data to initial state
+    };
 
     const handleLoginSubmit = (e) => {
         e.preventDefault();
@@ -25,25 +32,24 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
         post('/forgot-password', {
             onSuccess: () => {
                 alert('Password reset link sent to your email!');
-                setShowForgotPassword(false);
-                reset();
+                toggleForgotPassword(false); // Switch back to login and clear errors
             },
             onFinish: () => reset(),
         });
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-500">
-            <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-[90%] max-w-md border border-gray-200 animate-slideIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-all duration-600 font-montserrat">
+            <div className="relative bg-white   p-10 rounded-xl shadow-2xl h-[450px] w-[380px] ml-2 mr-2 sd:h-[500px] sd:w-[360px] lg:h-[450px] lg:w-[360px] md:h-[450px] md:w-[370px] border border-gray-200 animate-slideIn">
                 <button
                     onClick={closeModal}
-                    className="absolute top-4 right-4 text-gray-600 text-2xl font-semibold hover:text-gray-800 transition-all duration-300 hover:scale-110"
+                    className="absolute top-4 right-4 text-gray-600 text-2xl font-bold hover:text-gray-800 transition-all duration-300 hover:scale-110"
                 >
                     ×
                 </button>
 
-                <h2 className="text-4xl font-semibold text-center text-gray-900 mb-8 tracking-tight">
-                    {showForgotPassword ? 'Reset Password' : 'Log In'}
+                <h2 className="text-3xl font-bold text-center text-gray-900 mb-8 mt-4 lg:mt-5">
+                    {showForgotPassword ? 'Reset Password' : 'Sign In'}
                 </h2>
 
                 {/* General error */}
@@ -54,12 +60,13 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                 )}
 
                 {!showForgotPassword ? (
-                    <form onSubmit={handleLoginSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <form onSubmit={handleLoginSubmit} className="space-y-4" >
+                        <div className="flex flex-col items-center justify-center w-full">
+                            <span className="text-sm text-gray-600 mb-2">Use your email to sign in</span>
                             <input
                                 type="email"
                                 id="email"
+                                name="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 required
@@ -67,33 +74,34 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                                 maxLength="255"
                                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                 title="Please enter a valid email address (e.g., user@example.com)"
-                                className="w-full p-4 border-2 border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
-                                placeholder="Enter your email"
+                                className="w-full p-3 bg-gray-100 border-none rounded-md text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300"
+                                placeholder="Email"
+                                autoFocus
                             />
                             {errors.email && (
-                                <span className="text-red-500 text-xs mt-1">
+                                <span className="text-red-500 text-xs mt-1 block text-center">
                                     {Array.isArray(errors.email) ? errors.email[0] : errors.email}
                                 </span>
                             )}
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                             <input
                                 type="password"
                                 id="password"
+                                name="password"
                                 value={data.password}
                                 onChange={(e) => setData('password', e.target.value)}
                                 required
-                                minLength="6"
+                                minLength="8"
                                 maxLength="50"
-                                pattern=".{6,}"
-                                title="Password must be at least 6 characters long"
-                                className="w-full p-4 border-2 border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
-                                placeholder="Enter your password"
+                                pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d]).{8,}$"
+                                title="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number"
+                                className="w-full p-3 bg-gray-100 border-none rounded-md text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-300"
+                                placeholder="Password"
                             />
                             {errors.password && (
-                                <span className="text-red-500 text-xs mt-1">
+                                <span className="text-red-500 text-xs mt-1 block text-center">
                                     {Array.isArray(errors.password) ? errors.password[0] : errors.password}
                                 </span>
                             )}
@@ -102,30 +110,42 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl ${processing ? 'opacity-75 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-full font-bold uppercase text-sm tracking-wide hover:bg-[#FF416C] transition-all duration-300 transform hover:scale-105 ${processing ? 'opacity-75 cursor-not-allowed' : ''}`}
                         >
-                            {processing ? 'Logging in...' : 'Log In'}
+                            {processing ? (
+                                <span className="flex items-center justify-center">
+                                    <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+                                    Signing in...
+                                </span>
+                            ) : (
+                                'Sign In'
+                            )}
                         </button>
                     </form>
                 ) : (
-                    <form onSubmit={handleForgotPasswordSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                        <div className="flex flex-col items-center justify-center w-full">
+                            <span className="text-sm text-gray-600 mb-2">Enter your email to reset password</span>
                             <input
                                 type="email"
                                 id="email"
+                                name="email"
                                 value={data.email}
                                 onChange={(e) => setData('email', e.target.value)}
                                 required
-                                minLength="5"
+                                minLength="4"
                                 maxLength="255"
                                 pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                                 title="Please enter a valid email address (e.g., user@example.com)"
-                                className="w-full p-4 border-2 border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300"
-                                placeholder="Enter your email"
+                                className="w-full p-3 bg-gray-100 border-none rounded-md text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF4B2B]  transition-all duration-300"
+                                placeholder="Email"
+                                autofocus
                             />
                             {errors.email && (
-                                <span className="text-red-500 text-xs mt-1">
+                                <span className="text-red-500 text-xs mt-1 block text-center">
                                     {Array.isArray(errors.email) ? errors.email[0] : errors.email}
                                 </span>
                             )}
@@ -134,20 +154,27 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className={`w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3 rounded-lg font-semibold hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-xl ${processing ? 'opacity-75 cursor-not-allowed' : ''}`}
+                            className={`w-full bg-[#FF4B2B] text-white lg:text-sm py-3 lg:py-2 text-xs rounded-full font-bold uppercase tracking-wide hover:bg-[#FF416C] transition-all duration-300 transform hover:scale-105 ${processing ? 'opacity-75 cursor-not-allowed' : ''}`}
                         >
-                            {processing ? 'Sending...' : 'Send Password Reset Link'}
+                            {processing ? (
+                                <span className="flex items-center justify-center">
+                                    <svg className="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                    </svg>
+                                    Sending...
+                                </span>
+                            ) : (
+                                'Send Password Reset Link'
+                            )}
                         </button>
 
                         <div className="text-center">
                             <span
-                                onClick={() => {
-                                    setShowForgotPassword(false);
-                                    reset();
-                                }}
-                                className="text-sm text-emerald-600 hover:text-emerald-700 transition-all duration-300 cursor-pointer"
+                                onClick={() => toggleForgotPassword(false)}
+                                className="text-sm text-[#FF4B2B] hover:text-[#FF416C] transition-all duration-300 cursor-pointer"
                             >
-                                Back to Login
+                                Back to Sign In
                             </span>
                         </div>
                     </form>
@@ -156,7 +183,7 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                 {!showForgotPassword && (
                     <div className="mt-6 text-center space-y-3">
                         <button
-                            onClick={() => setShowForgotPassword(true)}
+                            onClick={() => toggleForgotPassword(true)}
                             className="text-sm text-emerald-600 hover:text-emerald-700 transition-all duration-300"
                         >
                             Forgot Password?
@@ -167,16 +194,13 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                                 onClick={toggleToRegistrationModal}
                                 className="text-emerald-600 hover:text-emerald-700 transition-all duration-300 cursor-pointer"
                             >
-                                Create an account
+                                Sign Up
                             </span>
                         </div>
                     </div>
                 )}
-            </div>
 
-            {/* Custom CSS for animations */}
-            <style>
-                {`
+                <style jsx>{`
                     @keyframes slideIn {
                         from {
                             transform: translateY(20px);
@@ -188,10 +212,13 @@ function LoginModal({ closeModal, toggleToRegistrationModal }) {
                         }
                     }
                     .animate-slideIn {
-                        animation: slideIn 0.4s ease-out;
+                        animation: slideIn 0.6s ease-out;
                     }
-                `}
-            </style>
+                    .font-montserrat {
+                        font-family: 'Montserrat', sans-serif;
+                    }
+                `}</style>
+            </div>
         </div>
     );
 }

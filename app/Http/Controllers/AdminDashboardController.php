@@ -13,15 +13,50 @@ use App\Models\Brand;
 use App\Models\User;
 use App\Models\Offer;
 use App\Models\Order;
-class HomepageController extends Controller
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class AdminDashboardController extends Controller
 {
-    public function view_admin_dashboard() {
+   public function view_admin_dashboard()
+    {
+      $endDate = Carbon::now();
+        $startDate = Carbon::now()->subMonths(11)->startOfMonth();
+
+        // Query for order count and revenue for processing orders for the last 12 months
+        $monthlyData = Order::select(
+            DB::raw("DATE_FORMAT(created_at, '%b %Y') as month_year"),
+            DB::raw("COUNT(CASE WHEN status = 'Processing' THEN 1 END) as order_count"),
+            DB::raw("SUM(CASE WHEN status = 'Processing' THEN amount ELSE 0 END) as revenue")
+        )
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%b %Y')"))
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->keyBy('month_year');
+
+        // Initialize arrays for chart data (ensure all 12 months are included, even with zero data)
+        $labels = [];
+        $orderCounts = [];
+        $revenues = [];
+
+        // Generate labels for the last 12 months
+        $current = $startDate->copy();
+        while ($current <= $endDate) {
+            $monthYear = $current->format('M Y');
+            $labels[] = $monthYear;
+            $orderCounts[] = isset($monthlyData[$monthYear]) ? $monthlyData[$monthYear]->order_count : 0;
+            $revenues[] = isset($monthlyData[$monthYear]) ? $monthlyData[$monthYear]->revenue : 0;
+            $current->addMonth();
+        }
+
+        // Fetch existing counts
         $userCount = User::where('usertype', 'user')->count();
         $brandCount = Brand::count();
         $orderCount = Order::whereIn('status', ['processing', 'completed'])->count();
         $pendingOrderCount = Order::where('status', 'pending')->count();
         $productCount = Product::count();
-        $totalSales = Order::sum('amount');
+        $totalSales = Order::whereIn('status', ['processing', 'completed'])->sum('amount');
 
         return Inertia::render('AdminDashboard/Dashboard', [
             'activeLink' => 'dashboard',
@@ -31,6 +66,11 @@ class HomepageController extends Controller
             'pendingOrderCount' => $pendingOrderCount,
             'productCount' => $productCount,
             'totalSales' => $totalSales,
+            'chartData' => [
+                'labels' => $labels,
+                'orderCounts' => $orderCounts,
+                'revenues' => $revenues,
+            ],
         ]);
     }
 
@@ -807,7 +847,6 @@ class HomepageController extends Controller
             'required_if:offer.discount_type,fixed',
             'after_or_equal:offer.start_date',
         ],
-        'offer.is_active' => 'required|in:yes,no',
     ]);
 
     // Update product is_offered_product status
@@ -826,7 +865,6 @@ class HomepageController extends Controller
         'discount_type' => $request->offer['discount_type'],
         'offer_price' => $request->offer['offer_price'] ? floatval($request->offer['offer_price']) : null,
         'discount_value' => $request->offer['offer_price'] ? ($product->price - floatval($request->offer['offer_price'])) : 0,
-        'is_active' => $request->offer['is_active'],
         'start_date' => $request->offer['discount_type'] === 'unlimited' ? null : $request->offer['start_date'],
         'end_date' => $request->offer['discount_type'] === 'unlimited' ? null : $request->offer['end_date'],
     ];
@@ -842,12 +880,18 @@ class HomepageController extends Controller
 
 
 
+public function about()
+    {
 
 
 
 
+        return Inertia::render('Landing/About');
 
 
+
+
+    }
 
 
 }

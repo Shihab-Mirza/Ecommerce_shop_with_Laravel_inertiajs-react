@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
 const Modal = ({ isOpen, onClose, onConfirm, message }) => {
   if (!isOpen) return null;
@@ -298,15 +299,17 @@ const AddVoucherComponent = ({ auth, vouchers: initialVouchers, errors: initialE
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleUpdate(voucher)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-300`}
+                          className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                          title={editingVoucherId === voucher.id ? 'Save' : 'Edit'}
                         >
-                          {editingVoucherId === voucher.id ? 'Save' : 'Edit'}
+                          <FaEdit />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(voucher.id)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-300`}
+                          className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-200`}
+                          title="Delete"
                         >
-                          Delete
+                          <FaTrash />
                         </button>
                       </div>
                     </li>

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserPoint;
+use App\Models\Userpoint;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -13,7 +13,7 @@ class UserPointController extends Controller
         $perPage = 20;
         $search = $request->input('search', '');
 
-        $userPointsQuery = UserPoint::with('user')
+        $userPointsQuery = Userpoint::with('user')
             ->when($search, function ($query, $search) {
                 return $query->whereHas('user', function ($userQuery) use ($search) {
                     $userQuery->where('name', 'like', "%{$search}%")

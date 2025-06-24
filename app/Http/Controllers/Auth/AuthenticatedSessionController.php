@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Models\Cart;
+use App\Models\Cartitem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +21,7 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): Response
     {
-     return Inertia::render('Auth/Login', [
+        return Inertia::render('Auth/Login', [
             'canResetPassword' => Route::has('password.request'),
             'status' => session('status'),
         ]);
@@ -44,12 +45,11 @@ class AuthenticatedSessionController extends Controller
         // Check the user's type and redirect accordingly
         if ($user->usertype == 'admin') {
             return redirect()->intended(route('dashboard', absolute: false));
-        } 
+        }
         else if ($user->usertype == 'Deliveryman')
         {
             return redirect()->intended(route('delivery.homepage', absolute: false));
-        } 
-        
+        }
         else {
             return redirect()->route('home');
         }
@@ -75,17 +75,45 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Update user_id for the guest cart.
+     * Update user_id for the guest cart and merge items, keeping newer product entries.
      */
     protected function updateuseridGuestCartToUserCart($userid, $guestCart): void
     {
         // Check if guestCart exists
         if ($guestCart) {
-            // Update the guest cart: set session_id to null and assign user_id
-            Cart::where('id', $guestCart['id'])->update([
-                'session_id' => null,
-                'user_id' => $userid,
-            ]);
+            // Check if the user already has a cart
+            $userCart = Cart::where('user_id', $userid)->first();
+
+            if ($userCart) {
+                // Get guest cart items
+                $guestCartItems = Cartitem::where('cart_id', $guestCart['id'])->get();
+
+                foreach ($guestCartItems as $guestItem) {
+                    // Check if an item with the same product_id exists in the user's cart
+                    $existingItem = Cartitem::where('cart_id', $userCart->id)
+                         ->where('product_id', $guestItem->product_id)
+                        ->first();
+                    if ($existingItem) {
+                        // Delete the existing item to keep the newer one
+                        $existingItem->delete();
+                    }
+
+                    // Reassign the guest item to the user's cart
+                    $guestItem->update([
+                        'cart_id' => $userCart->id,
+                    ]);
+                }
+
+                // Delete the guest cart
+                Cart::where('id', $guestCart['id'])->delete();
+            } else {
+                // No existing user cart, update the guest cart
+                Cart::where('id', $guestCart['id'])->update([
+                    'session_id' => null,
+                    'user_id' => $userid,
+                    'checkout_token' => $guestCart['checkout_token'],
+                ]);
+            }
         }
     }
 

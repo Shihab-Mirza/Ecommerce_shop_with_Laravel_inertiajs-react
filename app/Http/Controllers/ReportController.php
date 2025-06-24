@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -8,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Product;
+use App\Models\Orderitem;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -18,9 +18,6 @@ class ReportController extends Controller
     {
         return Inertia::render('AdminDashboard/ViewReports');
     }
-
-
-
 
     public function generatePDF(Request $request)
     {
@@ -37,37 +34,51 @@ class ReportController extends Controller
         $fromDate = Carbon::parse($request->query('from_date'))->startOfDay();
         $toDate = Carbon::parse($request->query('to_date'))->endOfDay();
 
-        // Fetch orders within the date range
-        $orders = Order::whereBetween('created_at', [$fromDate, $toDate])->get();
+        // Fetch orders within the date range with their items, filtered by status
+        $orders = Order::with('items.product')
+            ->whereBetween('created_at', [$fromDate, $toDate])
+            ->whereIn('status', ['Completed', 'Processing'])
+            ->get()
+            ->map(function ($order) {
+                // Format each item individually without merging
+                $order->order_items = $order->items->map(function ($item) {
+                    return [
+                        'quantity' => $item->quantity,
+                        'product_name' => $item->product->name,
+                    ];
+                });
+                return $order;
+            });
+
         $orderCount = $orders->count();
         $totalAmount = $orders->sum('amount');
-
-
 
         // Fetch new products added within the date range
         $products = Product::whereBetween('created_at', [$fromDate, $toDate])
             ->select('name', 'quantity', 'price')
             ->get();
-         $newproductcount = $products ->count('name');
-         $newproductquantity = $products ->sum('quantity');
-        $newproductprice = $products ->sum('price');
- // Fetch new products added within the date range
-        $newuser = User::whereBetween('created_at', [$fromDate, $toDate])
+        $newProductCount = $products->count();
+        $newProductQuantity = $products->sum('quantity');
+        $newProductPrice = $products->sum('price');
+
+        // Fetch new users added within the date range
+        $newUsers = User::whereBetween('created_at', [$fromDate, $toDate])
             ->select('name')
             ->get();
-        $newusercount = $newuser ->count('name');
+        $newUserCount = $newUsers->count();
 
+        // Fetch total products
+        $allProducts = Product::select('name', 'quantity', 'price')->get();
+        $currentProductCount = $allProducts->count();
+        $currentProductQuantity = $allProducts->sum('quantity');
+        $currentProductPrice = $allProducts->sum('price');
 
-   $product = Product::get();
-        $currentproductcount = $product->count('name');
-         $currentproductquantity = $product->sum('quantity');
-         $currentproductprice = $product->sum('price')
+        // Fetch total users
+        $currentUsers = User::select('name')->get();
+        $currentUserCount = $currentUsers->count();
 
-
-         ;
-        $currentuser = User::get();
-        $currentusercount = $currentuser ->count('name');
         $currentDate = Carbon::now()->toDateString();
+
         $data = [
             'from_date' => $fromDate->toDateString(),
             'to_date' => $toDate->toDateString(),
@@ -75,19 +86,15 @@ class ReportController extends Controller
             'order_count' => $orderCount,
             'total_amount' => $totalAmount,
             'products' => $products,
-            'productcount'=>$newproductcount,
-            'productprice'=>$newproductprice,
-            'productquantity'=> $newproductquantity,
-            'Newusercount' =>$newusercount,
-
-
-            'Currentproductcount'=>$currentproductcount,
-            'Currentproductprice'=>$currentproductprice,
-            'Currentproductquantity'=> $currentproductquantity,
-            'Currentusercount' =>$currentusercount,
-             'CurrentDateTime' =>   $currentDate,
-
-
+            'productcount' => $newProductCount,
+            'productprice' => $newProductPrice,
+            'productquantity' => $newProductQuantity,
+            'Newusercount' => $newUserCount,
+            'Currentproductcount' => $currentProductCount,
+            'Currentproductprice' => $currentProductPrice,
+            'Currentproductquantity' => $currentProductQuantity,
+            'Currentusercount' => $currentUserCount,
+            'CurrentDateTime' => $currentDate,
         ];
 
         $fileName = 'report_' . $fromDate->toDateString() . '_' . $toDate->toDateString() . '.pdf';

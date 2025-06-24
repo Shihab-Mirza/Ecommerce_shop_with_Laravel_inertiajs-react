@@ -20,14 +20,12 @@ use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
-
     public function index()
     {
-        // Fetch slideshow images
         $images = Homepage::all()->map(function ($image) {
             return [
                 'id' => $image->id,
-                'url' => asset('storage/' . $image->image_path),
+                'image' => $image->image_path ? asset('storage/' . $image->image_path) : asset('images/placeholder.jpg'),
             ];
         })->toArray();
 
@@ -58,9 +56,7 @@ class HomeController extends Controller
 
         // Fetch featured products with offer details and image
         $featuredProducts = Product::where('is_featured', 'yes')
-            ->with(['offer' => function ($query) {
-                $query->where('is_active', 'yes');
-            }])
+            ->with('offer')
             ->select('id', 'name', 'price', 'is_offered_product', 'image')
             ->take(25)
             ->get()
@@ -78,9 +74,7 @@ class HomeController extends Controller
 
         // Fetch special offer products with offer details and image
         $specialOfferProducts = Product::where('is_special_offer', 'yes')
-            ->with(['offer' => function ($query) {
-                $query->where('is_active', 'yes');
-            }])
+            ->with('offer')
             ->select('id', 'name', 'price', 'is_special_offer', 'image')
             ->take(25)
             ->get()
@@ -99,9 +93,7 @@ class HomeController extends Controller
         // Fetch new arrival products with offer details and image
         $newArrivalProducts = Product::where('is_featured', 'no')
             ->where('is_special_offer', 'no')
-            ->with(['offer' => function ($query) {
-                $query->where('is_active', 'yes');
-            }])
+            ->with('offer')
             ->select('id', 'name', 'price', 'is_offered_product', 'image')
             ->orderBy('id', 'desc')
             ->take(25)
@@ -164,13 +156,14 @@ class HomeController extends Controller
         ]);
     }
 
-      public function byCategory(Request $request, $id)
+    public function byCategory(Request $request, $id)
     {
         // Retrieve query parameters for filters
         $minPrice = $request->query('minPrice');
         $maxPrice = $request->query('maxPrice');
         $inStock = $request->query('inStock');
         $offered = $request->query('offered');
+        $sort = $request->query('sort'); // New sort parameter
 
         // Validate price inputs
         if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
@@ -178,6 +171,10 @@ class HomeController extends Controller
         }
         if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
             return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
+        }
+        // Validate sort input
+        if ($sort !== null && !in_array($sort, ['high-to-low', 'low-to-high'])) {
+            return redirect()->back()->withErrors(['sort' => 'Invalid sort option.']);
         }
 
         // Build the query for products in the specified category
@@ -187,14 +184,12 @@ class HomeController extends Controller
         // Apply price filters
         if ($minPrice !== null) {
             $query->where(function ($q) use ($minPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($minPrice) {
                                  $offerQuery->where('offer_price', '>=', $minPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '>=', $minPrice);
@@ -208,14 +203,12 @@ class HomeController extends Controller
 
         if ($maxPrice !== null) {
             $query->where(function ($q) use ($maxPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
                                  $offerQuery->where('offer_price', '<=', $maxPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '<=', $maxPrice);
@@ -235,6 +228,18 @@ class HomeController extends Controller
         // Apply offered filter
         if ($offered) {
             $query->where('is_offered_product', 'yes');
+        }
+
+        // Apply sorting with LEFT JOIN
+        if ($sort) {
+            $query->leftJoin('offers', 'products.id', '=', 'offers.product_id')
+                  ->orderByRaw("
+                      CASE
+                          WHEN products.is_offered_product = 'yes' AND offers.offer_id IS NOT NULL
+                          THEN offers.offer_price
+                          ELSE products.price
+                      END " . ($sort === 'high-to-low' ? 'DESC' : 'ASC')
+                  );
         }
 
         // Paginate the results
@@ -257,6 +262,7 @@ class HomeController extends Controller
                 'maxPrice' => $maxPrice ?? '',
                 'inStock' => $inStock ? true : false,
                 'offered' => $offered ? true : false,
+                'sort' => $sort ?? '',
                 'category_id' => $id,
                 'subcategory_id' => '',
                 'brand_id' => '',
@@ -271,6 +277,7 @@ class HomeController extends Controller
         $maxPrice = $request->query('maxPrice');
         $inStock = $request->query('inStock');
         $offered = $request->query('offered');
+        $sort = $request->query('sort'); // New sort parameter
 
         // Validate price inputs
         if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
@@ -278,6 +285,10 @@ class HomeController extends Controller
         }
         if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
             return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
+        }
+        // Validate sort input
+        if ($sort !== null && !in_array($sort, ['high-to-low', 'low-to-high'])) {
+            return redirect()->back()->withErrors(['sort' => 'Invalid sort option.']);
         }
 
         // Build the query for products in the specified subcategory
@@ -287,14 +298,12 @@ class HomeController extends Controller
         // Apply price filters
         if ($minPrice !== null) {
             $query->where(function ($q) use ($minPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($minPrice) {
                                  $offerQuery->where('offer_price', '>=', $minPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '>=', $minPrice);
@@ -308,14 +317,12 @@ class HomeController extends Controller
 
         if ($maxPrice !== null) {
             $query->where(function ($q) use ($maxPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
                                  $offerQuery->where('offer_price', '<=', $maxPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '<=', $maxPrice);
@@ -335,6 +342,18 @@ class HomeController extends Controller
         // Apply offered filter
         if ($offered) {
             $query->where('is_offered_product', 'yes');
+        }
+
+        // Apply sorting with LEFT JOIN
+        if ($sort) {
+            $query->leftJoin('offers', 'products.id', '=', 'offers.product_id')
+                  ->orderByRaw("
+                      CASE
+                          WHEN products.is_offered_product = 'yes' AND offers.offer_id IS NOT NULL
+                          THEN offers.offer_price
+                          ELSE products.price
+                      END " . ($sort === 'high-to-low' ? 'DESC' : 'ASC')
+                  );
         }
 
         // Paginate the results
@@ -357,6 +376,7 @@ class HomeController extends Controller
                 'maxPrice' => $maxPrice ?? '',
                 'inStock' => $inStock ? true : false,
                 'offered' => $offered ? true : false,
+                'sort' => $sort ?? '',
                 'category_id' => '',
                 'subcategory_id' => $id,
                 'brand_id' => '',
@@ -371,6 +391,7 @@ class HomeController extends Controller
         $maxPrice = $request->query('maxPrice');
         $inStock = $request->query('inStock');
         $offered = $request->query('offered');
+        $sort = $request->query('sort'); // New sort parameter
 
         // Validate price inputs
         if ($minPrice !== null && (!is_numeric($minPrice) || $minPrice < 0)) {
@@ -378,6 +399,10 @@ class HomeController extends Controller
         }
         if ($maxPrice !== null && (!is_numeric($maxPrice) || $maxPrice < 0)) {
             return redirect()->back()->withErrors(['maxPrice' => 'Maximum price must be a non-negative number.']);
+        }
+        // Validate sort input
+        if ($sort !== null && !in_array($sort, ['high-to-low', 'low-to-high'])) {
+            return redirect()->back()->withErrors(['sort' => 'Invalid sort option.']);
         }
 
         // Build the query for products in the specified brand
@@ -387,14 +412,12 @@ class HomeController extends Controller
         // Apply price filters
         if ($minPrice !== null) {
             $query->where(function ($q) use ($minPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($minPrice) {
                                  $offerQuery->where('offer_price', '>=', $minPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($minPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '>=', $minPrice);
@@ -408,14 +431,12 @@ class HomeController extends Controller
 
         if ($maxPrice !== null) {
             $query->where(function ($q) use ($maxPrice) {
-                // Offered products: filter by offer_price
                 $q->where(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', 'yes')
                              ->whereHas('offer', function ($offerQuery) use ($maxPrice) {
                                  $offerQuery->where('offer_price', '<=', $maxPrice);
                              });
                 })
-                // Non-offered products or products without an offer: filter by price
                 ->orWhere(function ($subQuery) use ($maxPrice) {
                     $subQuery->where('is_offered_product', '!=', 'yes')
                              ->where('price', '<=', $maxPrice);
@@ -435,6 +456,18 @@ class HomeController extends Controller
         // Apply offered filter
         if ($offered) {
             $query->where('is_offered_product', 'yes');
+        }
+
+        // Apply sorting with LEFT JOIN
+        if ($sort) {
+            $query->leftJoin('offers', 'products.id', '=', 'offers.product_id')
+                  ->orderByRaw("
+                      CASE
+                          WHEN products.is_offered_product = 'yes' AND offers.offer_id IS NOT NULL
+                          THEN offers.offer_price
+                          ELSE products.price
+                      END " . ($sort === 'high-to-low' ? 'DESC' : 'ASC')
+                  );
         }
 
         // Paginate the results
@@ -457,6 +490,7 @@ class HomeController extends Controller
                 'maxPrice' => $maxPrice ?? '',
                 'inStock' => $inStock ? true : false,
                 'offered' => $offered ? true : false,
+                'sort' => $sort ?? '',
                 'category_id' => '',
                 'subcategory_id' => '',
                 'brand_id' => $id,
@@ -464,7 +498,6 @@ class HomeController extends Controller
         ]);
     }
 
-    // Existing show method for individual product pages
     public function show($id)
     {
         $product = Product::with(['category', 'subcategory', 'brand', 'offer', 'reviews'])->findOrFail($id);
@@ -479,26 +512,51 @@ class HomeController extends Controller
         ]);
     }
 
-public function view_full_Product($id)
-{
-    $product = Product::with([
-        'category:id,name',
-        'subcategory:id,category_id,sub_category_name',
-        'brand:id,brand_name',
-        'offer',
-        'reviews' => function ($query) {
-            $query->with('user:id,name')->orderBy('created_at', 'desc')->take(2);
+    public function view_full_Product($id)
+    {
+        $product = Product::with([
+            'category:id,name',
+            'subcategory:id,category_id,sub_category_name',
+            'brand:id,brand_name',
+            'offer',
+            'reviews' => function ($query) {
+                $query->with('user:id,name')->orderBy('created_at', 'desc')->take(2);
+            }
+        ])->findOrFail($id);
+
+        return Inertia::render('Landing/ShowProduct', [
+            'product' => $product,
+        ]);
+    }
+
+    public function searchProducts(Request $request)
+    {
+        $query = $request->input('query');
+
+        // Validate the search query
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([]);
         }
-    ])->findOrFail($id);
 
-    return Inertia::render('Landing/ShowProduct', [
-        'product' => $product,
-    ]);
-}
+        // Search products by name (case-insensitive, partial match)
+        $products = Product::where('name', 'LIKE', '%' . $query . '%')
+            ->select('id', 'name') // Select only necessary fields
+            ->take(10) // Limit to 10 suggestions
+            ->get();
 
+        // Format the response
+        $results = $products->map(function ($product) {
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'url' => route('products.show', $product->id), // Generate URL for the product
+            ];
+        });
 
+        return response()->json($results);
+    }
 
-public function view_order_history_index()
+    public function view_order_history_index()
     {
         // Verify authentication
         if (!Auth::check()) {
@@ -517,7 +575,6 @@ public function view_order_history_index()
             ->where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
-
 
         return Inertia::render('Landing/ViewOrderHistory', [
             'orders' => $orders,

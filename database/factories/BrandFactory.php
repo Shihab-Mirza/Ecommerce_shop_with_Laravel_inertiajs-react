@@ -10,12 +10,34 @@ class BrandFactory extends Factory
 {
     public function definition()
     {
-        return [
-            'brand_name' => $this->faker->company(), // e.g., "Samsung", "Nike"
-            'subcategory_id' => Subcategory::factory(), // Creates a subcategory
-            'category_id' => function (array $attributes) {
-                return Subcategory::find($attributes['subcategory_id'])->category_id;
-            }, // Matches category of subcategory
+        // Fallback in case no specific brand is provided
+        $brands = [
+            'Apple', 'Samsung', 'Lenovo', 'HP', 'Dell', 'Asus', 'Acer', 'Microsoft',
+            'Sony', 'LG', 'Razer', 'MSI', 'Xiaomi', 'Huawei', 'Google', 'OnePlus',
+            'JBL', 'Bose', 'Anker', 'Logitech', 'Corsair', 'Nvidia', 'AMD', 'Intel',
+            'Toshiba', 'Alienware', 'Vivo', 'Oppo', 'Realme', 'ZTE', 'Nokia', 'Motorola',
+            'HTC', 'Panasonic', 'Philips', 'Olufsen', 'Sennheiser', 'Roku', 'Netgear',
+            'TP-Link', 'D-Link', 'Western Digital', 'Seagate', 'Kingston', 'SanDisk',
+            'Epson', 'Canon', 'Brother', 'Garmin', 'Fitbit', 'Belkin', 'Roccat', 'SteelSeries'
         ];
+
+        $subcategory = Subcategory::inRandomOrder()->first() ?? Subcategory::factory()->create();
+        $category = Category::find($subcategory->category_id);
+
+        return [
+            'brand_name' => $this->faker->unique()->randomElement($brands),
+            'subcategory_id' => $subcategory->id,
+            'category_id' => $category->id,
+        ];
+    }
+
+    // Custom state to set specific brand name, subcategory, and category
+    public function forSubcategory($brandName, $subcategoryId, $categoryId)
+    {
+        return $this->state([
+            'brand_name' => $brandName,
+            'subcategory_id' => $subcategoryId,
+            'category_id' => $categoryId,
+        ]);
     }
 }

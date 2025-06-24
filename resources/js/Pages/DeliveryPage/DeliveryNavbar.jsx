@@ -39,13 +39,12 @@ const DeliveryNavbar = ({
                             <FontAwesomeIcon icon={faBars} className="text-xl" />
                         </button>
                         <h1 className={`text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent ${isDarkMode ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500' : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'} animate-pulse tracking-wider`}>
-                            Computer Store
+                            Tech Store
                         </h1>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
                         <button className={`p-2 sm:p-3 rounded-full ${isDarkMode ? 'bg-gray-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600' : 'bg-gray-100 hover:bg-gradient-to-br hover:from-blue-400 hover:to-indigo-500'} transform hover:scale-110 transition-all duration-300 group relative`}>
                             <FontAwesomeIcon icon={faBell} className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} group-hover:text-white`} />
-                            <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs flex items-center justify-center text-white opacity-75">3</span>
                         </button>
                         <button
                             onClick={toggleDarkMode}

@@ -1,16 +1,28 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faPaperPlane, faShoppingCart, faPlus, faMinus, faCheckCircle, faExclamationCircle, faHome, faHeart } from '@fortawesome/free-solid-svg-icons';
+import {
+    faStar,
+    faPaperPlane,
+    faShoppingCart,
+    faPlus,
+    faMinus,
+    faCheckCircle,
+    faExclamationCircle,
+    faHome,
+    faHeart,
+    faClock,
+} from '@fortawesome/free-solid-svg-icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import NavBar from './Navbar';
 import Footer from './Footer';
 import LoginModal from './LoginModal';
 import RegistrationModal from './RegistrationModal';
+import CartModal from './CartModal';
 import { InertiaLink } from '@inertiajs/inertia-react';
 
 const Toast = ({ message, type, onClose }) => {
-    React.useEffect(() => {
+    useEffect(() => {
         const timer = setTimeout(() => {
             onClose();
         }, 3000);
@@ -19,30 +31,30 @@ const Toast = ({ message, type, onClose }) => {
 
     return (
         <motion.div
-            initial={{ opacity: 0, x: 100 }}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
+            exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.3 }}
-            className={`fixed top-4 right-4 max-w-sm w-full p-3 md:p-4 rounded-lg shadow-lg flex items-center gap-3 z-50 ${
+            className={`fixed top-4 right-2 sm:right-4 z-50 p-3 sm:p-4 rounded-lg shadow-lg flex items-center gap-3 max-w-[calc(100vw-1rem)] w-full sm:max-w-sm ${
                 type === 'success' ? 'bg-green-100 border-green-500 text-green-800' : 'bg-red-100 border-red-500 text-red-800'
             } border-l-4`}
         >
             <FontAwesomeIcon
                 icon={type === 'success' ? faCheckCircle : faExclamationCircle}
-                className={`text-lg md:text-xl ${type === 'success' ? 'text-green-500' : 'text-red-500'}`}
+                className={`text-lg sm:text-xl ${type === 'success' ? 'text-green-500' : 'text-red-500'}`}
             />
-            <p className="text-xs md:text-sm font-medium">{message}</p>
+            <p className="text-xs sm:text-sm font-medium">{message}</p>
         </motion.div>
     );
 };
 
 export default function ShowProduct({ auth, product, categories }) {
-    const { post, processing, setData: setCartData, errors: cartErrors } = useForm({
-        quantity: 1,
+    const { props } = usePage();
+    const { post: postReview, processing: reviewProcessing, errors: reviewErrors, setData: setReviewData } = useForm({
+        rating: 0,
+        comment: '',
     });
-
-
-
+    const { post: postWishlist, processing: wishlistProcessing } = useForm({});
     const [quantity, setQuantity] = useState(1);
     const [reviewRating, setReviewRating] = useState(0);
     const [reviewComment, setReviewComment] = useState('');
@@ -50,15 +62,47 @@ export default function ShowProduct({ auth, product, categories }) {
     const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const [isRegistrationModalOpen, setIsRegistrationModalOpen] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
-    const { post: postReview, processing: reviewProcessing, errors: reviewErrors, setData } = useForm({
-        rating: 0,
-        comment: '',
-    });
-    const { post: postWishlist, processing: wishlistProcessing } = useForm({});
+    const [cartCount, setCartCount] = useState(props.cartCount || 0);
+    const [cartItems, setCartItems] = useState(props.cartItems || []);
+    const [cartModalOpen, setCartModalOpen] = useState(false);
+    const [pendingCheckout, setPendingCheckout] = useState(false);
+    const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+    const [isAddingToCart, setIsAddingToCart] = useState(false); // State to track add-to-cart action
     const { flash } = usePage().props;
 
     const descriptionRef = useRef(null);
     const reviewsRef = useRef(null);
+
+    const cartQuantity = cartItems
+        .filter((item) => item.product_id === product.id)
+        .reduce((total, item) => total + item.quantity, 0);
+
+    // Countdown timer logic
+    useEffect(() => {
+        if (product.is_offered_product === 'yes' && product.offer?.end_date) {
+            const endDate = new Date(product.offer.end_date);
+
+            const updateCountdown = () => {
+                const now = new Date();
+                const timeDiff = endDate - now;
+
+                if (timeDiff <= 0) {
+                    setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+                    return;
+                }
+
+                const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+                setCountdown({ days, hours, minutes, seconds });
+            };
+
+            updateCountdown(); // Initial call
+            const interval = setInterval(updateCountdown, 1000); // Update every second
+            return () => clearInterval(interval); // Cleanup on unmount
+        }
+    }, [product.is_offered_product, product.offer?.end_date]);
 
     if (!product) {
         return (
@@ -74,41 +118,15 @@ export default function ShowProduct({ auth, product, categories }) {
         );
     }
 
-    const handleAddToCart = () => {
-        if (quantity <1) {
-            setToast({
-                show: true,
-                message: 'Please select a valid quantity.',
-                type: 'error',
-            });
-            return;
+    useEffect(() => {
+        setCartItems(props.cartItems || []);
+        setCartCount(props.cartCount || 0);
+        if (props.flash?.error) {
+            setToast({ show: true, message: props.flash.error, type: 'error' });
+        } else if (props.flash?.success) {
+            setToast({ show: true, message: props.flash.success, type: 'success' });
         }
-
-        setCartData('quantity', quantity);
-
-        post(route('cart.add', product.id), {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: (page) => {
-                const successMessage = page.props.flash?.success ;
-                setQuantity(0);
-                setCartData('quantity', 0);
-                setToast({
-                    show: true,
-                    message: successMessage,
-                    type: 'success',
-                });
-            },
-            onError: (errors) => {
-                const errorMessage = errors.quantity || errors.message;
-                setToast({
-                    show: true,
-                    message: errorMessage,
-                    type: 'error',
-                });
-            },
-        });
-    };
+    }, [props.cartItems, props.cartCount, props.flash]);
 
     const handleAddToWishlist = () => {
         if (!auth?.user) {
@@ -116,68 +134,61 @@ export default function ShowProduct({ auth, product, categories }) {
             return;
         }
 
+        postWishlist(route('wishlist.add', product.id), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: (page) => {
+                const successMessage = page.props.flash?.success || 'Product added to wishlist!';
+                setToast({ show: true, message: successMessage, type: 'success' });
+            },
+            onError: (errors) => {
+                const errorMessage = errors.error || 'Failed to add to wishlist.';
+                setToast({ show: true, message: errorMessage, type: 'error' });
+            },
+        });
+    };
 
-   postWishlist(route('wishlist.add', product.id), {
-        preserveScroll: true,
-        preserveState: true,
-        onSuccess: (page) => {
-            const successMessage = page.props.flash?.success;
-            setToast({
-                show: true,
-                message: successMessage ,
-                type: 'success',
-            });
-        },
-          onError: (errors) => {
-            // Check for flash errors manually after request finishes
-            const errorMessage = errors.error;
-            if (errorMessage) {
-                setToast({
-                    show: true,
-                    message: errorMessage,
-                    type: 'error',
-                });
-            }
-        },
-    });
-};
+    const toggleCartModal = () => {
+        setCartModalOpen((prev) => !prev);
+    };
+
+    const openLoginModal = () => {
+        setIsLoginModalOpen(true);
+    };
+
     const closeToast = () => {
         setToast({ show: false, message: '', type: '' });
     };
 
     const increaseQuantity = () => {
-        const newQuantity = quantity + 1;
-        setQuantity(newQuantity);
-        setCartData('quantity', newQuantity);
+        if (cartQuantity + quantity < product.quantity) {
+            setQuantity(quantity + 1);
+        }
     };
 
     const decreaseQuantity = () => {
         if (quantity > 1) {
-            const newQuantity = quantity - 1;
-            setQuantity(newQuantity);
-            setCartData('quantity', newQuantity);
+            setQuantity(quantity - 1);
         }
     };
 
     const handleQuantityChange = (e) => {
         const value = parseInt(e.target.value, 10);
-        if (!isNaN(value) && value >= 1) {
+        if (!isNaN(value) && value >= 1 && cartQuantity + value <= product.quantity) {
             setQuantity(value);
-            setCartData('quantity', value);
         } else if (e.target.value === '') {
             setQuantity('');
-            setCartData('quantity', '');
         }
     };
 
     const handleStarClick = (star) => {
         setReviewRating(star);
-        setData('rating', star);
+        setReviewData('rating', star);
     };
 
     const handleCommentChange = (e) => {
         setReviewComment(e.target.value);
-        setData('comment', e.target.value);
+        setReviewData('comment', e.target.value);
     };
 
     const handleReviewSubmit = (e) => {
@@ -186,12 +197,13 @@ export default function ShowProduct({ auth, product, categories }) {
             setIsLoginModalOpen(true);
             return;
         }
+
         postReview(route('reviews.store', product.id), {
             preserveScroll: true,
             onSuccess: () => {
                 setReviewRating(0);
                 setReviewComment('');
-                setData({ rating: 0, comment: '' });
+                setReviewData({ rating: 0, comment: '' });
             },
         });
     };
@@ -230,89 +242,120 @@ export default function ShowProduct({ auth, product, categories }) {
     return (
         <>
             <Head title={product.name} />
-            <NavBar auth={auth} categories={categories} />
-            <div className="min-h-screen bg-gray-100 py-2 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto">
-{/* Breadcrumb Navigation */}
-<div>
-  <div className="bg-white shadow-sm border border-gray-200 lg:p-6 p-3 w-full flex items-center justify-between lg:mt-[-1px] mt-12">
-    <nav className="flex items-center lg:text-sm md:text-xs sd:text-xs text-xs text-gray-600 overflow-hidden" aria-label="Breadcrumb">
-      <InertiaLink
-        href={route('home')}
-        className="flex items-center hover:text-indigo-600 transition-colors duration-200"
-      >
-        <FontAwesomeIcon icon={faHome} className="mr-1 h-3" />
-      </InertiaLink>
-      <span className="mx-1">/</span>
-      {product.category && product.category.id && product.category.name && (
-        <>
-          <InertiaLink
-            href={route('products.by.category', product.category.id)}
-            className="hover:text-indigo-600 transition-colors duration-200  max-w-[60px]"
-          >
-            {product.category.name}
-          </InertiaLink>
-          <span className="mx-1">/</span>
-        </>
-      )}
-      {product.subcategory && product.subcategory.id && product.subcategory.sub_category_name && (
-        <>
-          <InertiaLink
-            href={route('products.by.subcategory', product.subcategory.id)}
-            className="hover:text-indigo-600 transition-colors duration-200  max-w-[60px]"
-          >
-            {product.subcategory.sub_category_name}
-          </InertiaLink>
-          <span className="mx-1">/</span>
-        </>
-      )}
-      {product.brand && product.brand.id && product.brand.brand_name && (
-        <>
-          <InertiaLink
-            href={route('products.by.brand', product.brand.id)}
-            className="hover:text-indigo-600 transition-colors duration-200  max-w-[60px]"
-          >
-            {product.brand.brand_name}
-          </InertiaLink>
-          <span className="mx-1">/</span>
-        </>
-      )}
-      <span className="text-gray-900 font-medium truncate max-w-[80px]">
-        {(() => {
-          const productName = product.name || '';
-          if (typeof productName !== 'string') {
-            console.warn('product.name is not a string:', productName);
-            return productName;
-          }
-          const words = productName.trim().split(/\s+/);
-          return words.length > 2 && window.innerWidth < 640
-            ? words.slice(0, 2).join(' ') + ' ...'
-            : words.length > 6
-              ? words.slice(0, 6).join(' ') + ' ...'
-              : productName;
-        })()}
-      </span>
-    </nav>
-    <motion.button
-      onClick={handleAddToWishlist}
-      disabled={wishlistProcessing}
-      className={`px-2 py-1 bg-white rounded-md text-xs font-medium text-black ${
-        wishlistProcessing
-          ? 'bg-gray-200 cursor-not-allowed opacity-50'
-          : 'hover:bg-gray-100'
-      } transition-colors duration-200 flex items-center gap-1`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      <FontAwesomeIcon
-        icon={faHeart}
-        className="lg:text-sm"
-        style={{ color: 'white', stroke: 'black', strokeWidth: 30 }}
-      />
-      <span className=" lg:text-sm  hidden md:inline">Add to Wishlist</span>
-    </motion.button>
-  </div>
-</div>
+            <NavBar
+                auth={auth}
+                categories={categories}
+                cartCount={cartCount}
+                toggleCartModal={toggleCartModal}
+                setPendingCheckout={setPendingCheckout}
+                cartId={props.cartId}
+                checkoutToken={props.checkoutToken}
+            />
+            <div className="min-h-screen bg-gray-100 py-2 px-4 sm:px-6 lg:px-8 relative">
+                <button
+                    onClick={toggleCartModal}
+                    className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-40 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+                >
+                    <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+                        {cartCount}
+                    </span>
+                </button>
+
+                <CartModal
+                    isOpen={cartModalOpen}
+                    toggleCartModal={toggleCartModal}
+                    cartItems={cartItems}
+                    cartCount={cartCount}
+                    setCartItems={setCartItems}
+                    setCartCount={setCartCount}
+                    auth={auth}
+                    cartId={props.cartId}
+                    checkoutToken={props.checkoutToken}
+                    setPendingCheckout={setPendingCheckout}
+                    openLoginModal={openLoginModal}
+                />
+
+                <div className="max-w-full mx-auto lg:ml-10 lg:mr-10">
+                    <div>
+                        <div className="bg-white shadow-sm border border-gray-200 lg:p-6 p-3 w-full flex items-center justify-between lg:mt-[-1px] mt-9">
+                            <nav className="flex items-center lg:text-sm md:text-xs sd:text-xs text-xs text-gray-600 overflow-hidden" aria-label="Breadcrumb">
+                                <InertiaLink
+                                    href={route('home')}
+                                    className="flex items-center hover:text-indigo-600 transition-colors duration-200"
+                                >
+                                    <FontAwesomeIcon icon={faHome} className="mr-1 h-3" />
+                                </InertiaLink>
+                                <span className="mx-1">/</span>
+                                {product.category && product.category.id && product.category.name && (
+                                    <>
+                                        <InertiaLink
+                                            href={route('products.by.category', product.category.id)}
+                                            className="hover:text-indigo-600 truncate transition-colors duration-200 max-w-[60px]"
+                                        >
+                                            {product.category.name}
+                                        </InertiaLink>
+                                        <span className="mx-1">/</span>
+                                    </>
+                                )}
+                                {product.subcategory && product.subcategory.id && product.subcategory.sub_category_name && (
+                                    <>
+                                        <InertiaLink
+                                            href={route('products.by.subcategory', product.subcategory.id)}
+                                            className="hover:text-indigo-600 truncate transition-colors duration-200 max-w-[60px]"
+                                        >
+                                            {product.subcategory.sub_category_name}
+                                        </InertiaLink>
+                                        <span className="mx-1">/</span>
+                                    </>
+                                )}
+                                {product.brand && product.brand.id && product.brand.brand_name && (
+                                    <>
+                                        <InertiaLink
+                                            href={route('products.by.brand', product.brand.id)}
+                                            className="hover:text-indigo-600 truncate transition-colors duration-200 max-w-[60px]"
+                                        >
+                                            {product.brand.brand_name}
+                                        </InertiaLink>
+                                        <span className="mx-1">/</span>
+                                    </>
+                                )}
+                                <span className="text-gray-900 font-medium truncate max-w-[80px]">
+                                    {(() => {
+                                        const productName = product.name || '';
+                                        if (typeof productName !== 'string') {
+                                            console.warn('product.name is not a string:', productName);
+                                            return productName;
+                                        }
+                                        const words = productName.trim().split(/\s+/);
+                                        return words.length > 2 && window.innerWidth < 640
+                                            ? words.slice(0, 2).join(' ') + ' ...'
+                                            : words.length > 6
+                                            ? words.slice(0, 6).join(' ') + ' ...'
+                                            : productName;
+                                    })()}
+                                </span>
+                            </nav>
+                            <motion.button
+                                onClick={handleAddToWishlist}
+                                disabled={wishlistProcessing}
+                                className={`px-2 py-1 bg-white rounded-md text-xs font-medium text-black ${
+                                    wishlistProcessing
+                                        ? 'bg-gray-200 cursor-not-allowed opacity-50'
+                                        : 'hover:bg-gray-100'
+                                } transition-colors duration-200 flex items-center gap-1`}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <FontAwesomeIcon
+                                    icon={faHeart}
+                                    className="lg:text-sm"
+                                    style={{ color: 'white', stroke: 'black', strokeWidth: 30 }}
+                                />
+                                <span className="lg:text-sm hidden md:inline">Add to Wishlist</span>
+                            </motion.button>
+                        </div>
+                    </div>
 
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -345,13 +388,22 @@ export default function ShowProduct({ auth, product, categories }) {
 
                                     <div className="mb-4">
                                         {product.is_offered_product === 'yes' && product.offer ? (
-                                            <div className="flex items-center gap-2 md:gap-3">
-                                                <span className="text-base md:text-lg font-sans text-black line-through">
-                                                    Price: {parseFloat(product.price).toFixed(2)} Tk
-                                                </span>
-                                                <span className="text-sm md:text-[15px] font-bold text-red-600">
-                                                    {parseFloat(product.offer.offer_price).toFixed(2)} Tk
-                                                </span>
+                                            <div className="flex flex-col gap-2">
+                                                <div className="flex items-center gap-2 md:gap-3">
+                                                    <span className="text-base md:text-lg font-sans text-black line-through">
+                                                        Price: {parseFloat(product.price).toFixed(2)} Tk
+                                                    </span>
+                                                    <span className="text-sm md:font-bold text-red-600">
+                                                        {parseFloat(product.offer.offer_price).toFixed(2)} Tk
+                                                    </span>
+                                                </div>
+                                                {product.offer.end_date && countdown.days >= 0 && (
+                                                    <div className="flex items-center gap-2 text-xs md:text-sm text-gray-700 font-medium">
+                                                        <span>
+                                                            Offer ends in: {countdown.days}d {countdown.hours}h {countdown.minutes}m {countdown.seconds}s ⏳
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <span className="text-lg md:text-[25px] font-bold text-gray-900">
@@ -402,107 +454,88 @@ export default function ShowProduct({ auth, product, categories }) {
                                                 })}
                                             </ul>
                                         </div>
-                                        <p className="text-lg md:text-xl font-sans text-black mt-6 md:mt-8">Payment Options</p>
-                                        <div className="mt-3 md:mt-4 grid grid-cols-1 gap-3 md:gap-4 w-full md:w-[510px]">
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3 }}
-                                                className="bg-gray-50 p-3 md:p-4 rounded-lg shadow-sm border border-gray-200"
-                                            >
-                                                <div className="flex flex-col md:flex-row">
-                                                    {product.is_offered_product === 'yes' && product.offer ? (
-                                                        <>
-                                                            <span className="text-xs md:text-sm text-black line-through mr-0 md:mr-2 mt-2 md:mt-3">
-                                                                {parseFloat(product.price).toFixed(2)} Tk
-                                                            </span>
-                                                            <span className="text-xs md:text-sm text-gray-500 mt-1 md:mt-3">
-                                                                {parseFloat(product.offer.offer_price).toFixed(2)} Tk
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-xs md:text-sm text-gray-500 mt-2 md:mt-3">
-                                                            {parseFloat(product.price).toFixed(2)} Tk
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-1 md:mt-2">Online / Cash on Delivery</p>
-                                            </motion.div>
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3, delay: 0.1 }}
-                                                className="bg-gray-50 p-3 md:p-4 rounded-lg shadow-sm border border-gray-200"
-                                            >
-                                                <div className="flex flex-col md:flex-row">
-                                                    {product.is_offered_product === 'yes' && product.offer ? (
-                                                        <>
-                                                            <span className="text-xs md:text-sm text-black line-through mr-0 md:mr-2 mt-2 md:mt-3">
-                                                                {parseFloat(product.price).toFixed(2)} Tk
-                                                            </span>
-                                                            <span className="text-xs md:text-sm text-gray-500 mt-1 md:mt-3">
-                                                                {parseFloat(product.offer.offer_price).toFixed(2)} Tk
-                                                            </span>
-                                                        </>
-                                                    ) : (
-                                                        <span className="text-xs md:text-sm text-gray-500 mt-2 md:mt-3">
-                                                            {parseFloat(product.price).toFixed(2)} Tk
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-gray-500 mt-1 md:mt-2">Store Pickup Available</p>
-                                            </motion.div>
-                                        </div>
                                     </div>
 
-                    <div className="flex flex-row items-center gap-3 md:gap-4 mb-4 md:mb-6">
-  <div className="flex items-center w-auto">
-    <span className="mr-2 md:mr-3 text-gray-700 font-medium text-xs md:text-sm">Quantity:</span>
-    <div className="flex items-center border border-gray-200 rounded-lg">
-      <motion.button
-        onClick={decreaseQuantity}
-        disabled={quantity <= 1}
-        className="px-2 md:px-3 py-1 md:py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <FontAwesomeIcon icon={faMinus} className="text-xs md:text-sm" />
-      </motion.button>
-      <input
-        type="number"
-        value={quantity}
-        onChange={handleQuantityChange}
-        className="w-12 md:w-16 px-2 md:px-4 py-1 md:py-2 text-gray-900 font-semibold text-xs md:text-sm text-center border-none focus:ring-0"
-        min="1"
-      />
-      <motion.button
-        onClick={increaseQuantity}
-        className="px-2 md:px-3 py-1 md:py-2 text-gray-600 hover:bg-gray-100"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <FontAwesomeIcon icon={faPlus} className="text-xs md:text-sm" />
-      </motion.button>
-    </div>
-  </div>
-
-  <motion.button
-    onClick={handleAddToCart}
-    disabled={processing}
-    className={`flex items-center justify-center gap-2 px-3 py-2 md:px-4 md:py-3 rounded-lg text-white font-semibold text-xs md:text-sm transition-all duration-300 w-auto ${
-      processing ? 'bg-indigo-600 opacity-60 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
-    }`}
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
-  >
-    <FontAwesomeIcon icon={faShoppingCart} className="text-base md:text-lg" />
-    Add to Cart
-  </motion.button>
-</div>
+                                    <div className="flex flex-col items-start gap-2 mb-4 md:mb-6">
+                                        <div className="flex flex-row items-center gap-3 md:gap-4">
+                                            <div className="flex items-center w-auto">
+                                                <span className="mr-2 md:mr-3 text-gray-700 font-medium text-xs md:text-sm">Quantity:</span>
+                                                <div className="flex items-center border border-gray-200 rounded-lg">
+                                                    <motion.button
+                                                        onClick={decreaseQuantity}
+                                                        disabled={quantity <= 1}
+                                                        className="px-2 md:px-3 lg:py-1 py-2 md:py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faMinus} className="text-sm md:text-sm" />
+                                                    </motion.button>
+                                                    <input
+                                                        type="number"
+                                                        value={quantity}
+                                                        onChange={handleQuantityChange}
+                                                        className="w-12 md:w-16 px-2 md:px-4 lg:py-1 py-2 md:py-2 text-gray-900 font-semibold text-xs md:text-sm text-center border-none focus:ring-0"
+                                                        min="1"
+                                                        max={product.quantity - cartQuantity}
+                                                    />
+                                                    <motion.button
+                                                        onClick={increaseQuantity}
+                                                        disabled={cartQuantity + quantity >= product.quantity}
+                                                        className="px-2 md:px-3 lg:py-1 py-2 md:py-2 text-gray-600 hover:bg-gray-100 disabled:opacity-50"
+                                                        whileHover={{ scale: 1.1 }}
+                                                        whileTap={{ scale: 0.95 }}
+                                                    >
+                                                        <FontAwesomeIcon icon={faPlus} className="text-xs md:text-sm" />
+                                                    </motion.button>
+                                                </div>
+                                            </div>
+                                            <InertiaLink
+                                                href={route('cart.add', product.id)}
+                                                method="post"
+                                                data={{ quantity: quantity }}
+                                                disabled={product.quantity === 0 || cartQuantity + quantity > product.quantity || isAddingToCart}
+                                                onClick={(e) => {
+                                                    if (product.quantity === 0 || cartQuantity + quantity > product.quantity) {
+                                                        e.preventDefault();
+                                                        setToast({
+                                                            show: true,
+                                                            message: product.quantity === 0
+                                                                ? 'Product is out of stock.'
+                                                                : 'Cart quantity exceeds stock availability.',
+                                                            type: 'error',
+                                                        });
+                                                    } else {
+                                                        setIsAddingToCart(true); // Disable button on click
+                                                    }
+                                                }}
+                                                onSuccess={() => {
+                                                    setIsAddingToCart(false); // Re-enable button on success
+                                                }}
+                                                onError={() => {
+                                                    setIsAddingToCart(false); // Re-enable button on error
+                                                }}
+                                                className={`flex items-center justify-center gap-2 px-3 lg:py-3 py-3 md:px-4 md:py-3 rounded-lg text-white font-semibold text-xs md:text-sm transition-all duration-300 w-auto ${
+                                                    product.quantity === 0 || cartQuantity + quantity > product.quantity || isAddingToCart
+                                                        ? 'bg-indigo-600 opacity-60 cursor-not-allowed'
+                                                        : 'bg-indigo-600 hover:bg-indigo-700'
+                                                }`}
+                                                as="button"
+                                                whileHover={{ scale: (product.quantity === 0 || cartQuantity + quantity > product.quantity || isAddingToCart) ? 1 : 1.05 }}
+                                                whileTap={{ scale: (product.quantity === 0 || cartQuantity + quantity > product.quantity || isAddingToCart) ? 1 : 0.95 }}
+                                            >
+                                                <FontAwesomeIcon icon={faShoppingCart} className="text-base md:text-lg" />
+                                                Add to Cart
+                                            </InertiaLink>
+                                        </div>
+                                        {cartQuantity + quantity >= product.quantity && product.quantity > 0 && (
+                                            <p className="text-red-600 text-xs md:text-sm font-medium">
+                                                Cart Quantity reached maximum stock availability.
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-
                         {product.spec_name_1 && (
                             <div className="border-t border-gray-200">
                                 <div className="flex border-b border-gray-200 flex-wrap">
@@ -568,7 +601,7 @@ export default function ShowProduct({ auth, product, categories }) {
                         )}
                     </motion.div>
                     <div ref={descriptionRef}></div>
-                    <div className="bg-white shadow-md overflow-hidden mt-4 md:mt-7">
+                    <div className="bg-white shadow-md overflow-hidden lg:mt-6 mt-6 md:mt-7 sd:mt-6">
                         <div className="border-t border-gray-200">
                             <div className="flex border-b border-gray-200">
                                 <div className="px-4 md:px-6 py-2 md:py-3 text-xs md:text-sm font-medium border-b-2 border-indigo-600 text-indigo-600">
@@ -600,19 +633,17 @@ export default function ShowProduct({ auth, product, categories }) {
                                             >
                                                 <div className="flex items-center mb-2 md:mb-3">
                                                     <div>
-                                                        <div className="flex items-center">
-                                                            <div className="flex space-x-1">
-                                                                {[1, 2, 3, 4, 5].map((star) => (
-                                                                    <span
-                                                                        key={star}
-                                                                        className={`text-base md:text-lg ${
-                                                                            star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
-                                                                        }`}
-                                                                    >
-                                                                        <FontAwesomeIcon icon={faStar} />
-                                                                    </span>
-                                                                ))}
-                                                            </div>
+                                                        <div className="flex space-x-1">
+                                                            {[1, 2, 3, 4, 5].map((star) => (
+                                                                <span
+                                                                    key={star}
+                                                                    className={`text-base md:text-lg ${
+                                                                        star <= review.rating ? 'text-yellow-400' : 'text-gray-300'
+                                                                    }`}
+                                                                >
+                                                                    <FontAwesomeIcon icon={faStar} />
+                                                                </span>
+                                                            ))}
                                                         </div>
                                                         <span className="text-gray-600 text-xs md:text-sm font-medium">
                                                             {review.user?.name || 'Anonymous'} • {formatDate(review.created_at)}
@@ -683,7 +714,7 @@ export default function ShowProduct({ auth, product, categories }) {
                                                 id="comment"
                                                 value={reviewComment}
                                                 onChange={handleCommentChange}
-                                                className="w-full p-2 md:p-3 bg-white/50 rounded-lg border border-gray-200/50 focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition-all text-xs md:text-sm shadow-sm"
+                                                className="w-full p-2 md:p-3 bg-white/50 rounded-lg border border-gray-200/50 focus:ring-2 focus:border-transparent transition-all text-xs md:text-sm shadow-sm"
                                                 rows="4 md:rows-5"
                                                 placeholder="Share your experience with this product..."
                                             />
@@ -708,46 +739,48 @@ export default function ShowProduct({ auth, product, categories }) {
                             </div>
                         </div>
                     </div>
+
+                    <AnimatePresence>
+                        {isLoginModalOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <LoginModal closeModal={closeLoginModal} toggleToRegistrationModal={toggleToRegistrationModal} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {isRegistrationModalOpen && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <RegistrationModal closeModal={closeRegistrationModal} toggleToLoginModal={toggleToLoginModal} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    <AnimatePresence>
+                        {toast.show && (
+                            <Toast
+                                message={toast.message}
+                                type={toast.type}
+                                onClose={closeToast}
+                            />
+                        )}
+                    </AnimatePresence>
                 </div>
+                {/* Close the main content div */}
             </div>
-
-            <AnimatePresence>
-                {isLoginModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <LoginModal closeModal={closeLoginModal} toggleToRegistrationModal={toggleToRegistrationModal} />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {isRegistrationModalOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <RegistrationModal closeModal={closeRegistrationModal} toggleToLoginModal={toggleToLoginModal} />
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {toast.show && (
-                    <Toast
-                        message={toast.message}
-                        type={toast.type}
-                        onClose={closeToast}
-                    />
-                )}
-            </AnimatePresence>
-            <div className="mb-6 md:mb-8"></div>
-            <Footer />
+            <div className="w-full min-w-full">
+                <Footer />
+            </div>
         </>
     );
 }

@@ -8,8 +8,20 @@ class CategoryFactory extends Factory
 {
     public function definition()
     {
+        $categories = [
+            'Laptops',
+            'Smartphones',
+            'Tablets',
+            'Desktops',
+            'Accessories',
+            'Wearables',
+            'Audio',
+            'Cameras',
+            'Networking'
+        ];
+
         return [
-            'name' => $this->faker->unique()->word(), // Ensures unique category names
+            'name' => $this->faker->unique()->randomElement($categories),
         ];
     }
 }

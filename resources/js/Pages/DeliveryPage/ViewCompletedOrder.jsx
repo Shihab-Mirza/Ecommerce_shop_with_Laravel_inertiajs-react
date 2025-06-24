@@ -3,7 +3,7 @@ import DeliveryNavbar from './DeliveryNavbar';
 import DeliverySidebar from './DeliverySidebar';
 import { Inertia } from '@inertiajs/inertia';
 
-const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
+const ViewCompletedOrder = ({ auth, orders, search: initialSearch, flash }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(false);
     const [isHomepageOpen, setIsHomepageOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -198,4 +198,4 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
     );
 };
 
-export default ViewDeliveredOrder;
+export default ViewCompletedOrder;

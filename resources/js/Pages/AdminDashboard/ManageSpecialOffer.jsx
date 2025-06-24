@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 
 const ManageSpecialOffer = ({ auth, products, flash, search: initialSearch }) => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -93,7 +94,6 @@ const ManageSpecialOffer = ({ auth, products, flash, search: initialSearch }) =>
             }
         }
 
-        // Check for offer_price when is_offered_product is yes
         if (
             editingProduct.offer.is_offered_product === 'yes' &&
             !editingProduct.offer.offer_price
@@ -101,7 +101,6 @@ const ManageSpecialOffer = ({ auth, products, flash, search: initialSearch }) =>
             newErrors.offer_price = 'Offer price is required when the product is offered.';
         }
 
-        // Check for negative discount_value
         if (
             editingProduct.offer.is_offered_product === 'yes' &&
             editingProduct.offer.offer_price &&
@@ -342,24 +341,28 @@ const ManageSpecialOffer = ({ auth, products, flash, search: initialSearch }) =>
                                                         </select>
                                                     </td>
                                                     <td className="py-3 px-3">
-                                                        <button
-                                                            onClick={handleSave}
-                                                            className={`bg-green-500 text-white px-3 py-1 rounded mr-2 ${isDarkMode ? 'hover:bg-green-600' : 'hover:bg-green-600'}`}
-                                                        >
-                                                            Save
-                                                        </button>
-                                                        <button
-                                                            onClick={handleCancel}
-                                                            className={`bg-gray-500 text-white px-3 py-1 rounded ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-600'}`}
-                                                        >
-                                                            Cancel
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={handleSave}
+                                                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                                                                title="Save"
+                                                            >
+                                                                <FaSave />
+                                                            </button>
+                                                            <button
+                                                                onClick={handleCancel}
+                                                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600'} text-white transition-all duration-200`}
+                                                                title="Cancel"
+                                                            >
+                                                                <FaTimes />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             ) : (
                                                 <>
                                                     <td className="py-3 px-3">{product.is_offered_product}</td>
-                                                    <td className="py-3 px-3">{product.offer?.offer_price ? `$${parseFloat(product.offer.offer_price).toFixed(2)}` : 'N/A'}</td>
+                                                    <td className="py-3 px-3">{product.offer?.offer_price ? `${parseFloat(product.offer.offer_price).toFixed(2)}` : 'N/A'}</td>
                                                     <td className="py-3 px-3">{product.offer?.discount_type || 'N/A'}</td>
                                                     <td className="py-3 px-3">{formatDate(product.offer?.start_date)}</td>
                                                     <td className="py-3 px-3">{formatDate(product.offer?.end_date)}</td>
@@ -367,9 +370,10 @@ const ManageSpecialOffer = ({ auth, products, flash, search: initialSearch }) =>
                                                     <td className="py-3 px-3">
                                                         <button
                                                             onClick={() => handleEdit(product)}
-                                                            className={`bg-blue-500 text-white px-3 py-1 rounded ${isDarkMode ? 'hover:bg-blue-600' : 'hover:bg-blue-600'}`}
+                                                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-all duration-200`}
+                                                            title="Edit"
                                                         >
-                                                            Edit
+                                                            <FaEdit />
                                                         </button>
                                                     </td>
                                                 </>

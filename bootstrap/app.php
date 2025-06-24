@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'delivery' => \App\Http\Middleware\DeliveryMiddleware::class,
+             'product_redirect' => \App\Http\Middleware\ProductRedirectMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEye, FaTrash } from 'react-icons/fa';
 
 const Modal = ({ isOpen, onClose, onConfirm, message }) => {
   if (!isOpen) return null;
@@ -192,16 +193,16 @@ const ViewSpecialOfferProduct = ({ auth, products, categories, subcategories, br
               <table className={`w-full table-auto text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                 <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} sticky top-0 z-10`}>
                   <tr>
-                    <th className="py-3 px-3 text-left font-semibold w-12 text-base">SI</th>
-                    <th className="py-3 px-3 text-left font-semibold w-16 text-base">Image</th>
-                    <th className="py-3 px-3 text-left font-semibold max-w-xs text-base">Name</th>
-                    <th className="py-3 px-3 text-left font-semibold w-24 text-base">Code</th>
-                    <th className="py-3 px-3 text-left font-semibold w-20 text-base">Price</th>
-                    <th className="py-3 px-3 text-left font-semibold w-28 text-base">Category</th>
-                    <th className="py-3 px-3 text-left font-semibold w-28 text-base">Subcategory</th>
-                    <th className="py-3 px-3 text-left font-semibold w-24 text-base">Brand</th>
-                    <th className="py-3 px-3 text-left font-semibold w-20 text-base">Quantity</th>
-                    <th className="py-3 px-3 text-left font-semibold w-32 text-base">Actions</th>
+                    <th className="py-3 px-4 text-left font-semibold w-12 text-base">SI</th>
+                    <th className="py-3 px-4 text-left font-semibold w-16 text-base">Image</th>
+                    <th className="py-3 px-4 text-left font-semibold max-w-xs text-base">Name</th>
+                    <th className="py-3 px-4 text-left font-semibold w-24 text-base">Product Code</th>
+                    <th className="py-3 px-4 text-left font-semibold w-20 text-base">Price</th>
+                    <th className="py-3 px-4 text-left font-semibold w-28 text-base">Category</th>
+                    <th className="py-3 px-4 text-left font-semibold w-28 text-base">Subcategory</th>
+                    <th className="py-3 px-4 text-left font-semibold w-24 text-base">Brand</th>
+                    <th className="py-3 px-4 text-left font-semibold w-20 text-base">Quantity</th>
+                    <th className="py-3 px-4 text-left font-semibold w-32 text-base">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -210,8 +211,8 @@ const ViewSpecialOfferProduct = ({ auth, products, categories, subcategories, br
                       key={product.id}
                       className={`transition-all duration-200 ${isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'} ${index % 2 === 0 ? (isDarkMode ? 'bg-gray-800' : 'bg-white') : (isDarkMode ? 'bg-gray-750' : 'bg-gray-50')}`}
                     >
-                      <td className="py-3 px-3 w-12">{getSerialNumber(index)}</td>
-                      <td className="py-3 px-3 w-16">
+                      <td className="py-3 px-4 w-12">{getSerialNumber(index)}</td>
+                      <td className="py-3 px-4 w-16">
                         {product.image ? (
                           <img
                             src={`/storage/${product.image}`}
@@ -222,26 +223,28 @@ const ViewSpecialOfferProduct = ({ auth, products, categories, subcategories, br
                           <span className="text-gray-500">No Image</span>
                         )}
                       </td>
-                      <td className="py-3 px-3 max-w-xs whitespace-normal">{product.name}</td>
-                      <td className="py-3 px-3 w-24 whitespace-normal">{product.product_code}</td>
-                      <td className="py-3 px-3 w-20 whitespace-normal">${parseFloat(product.price).toFixed(2)}</td>
-                      <td className="py-3 px-3 w-28 whitespace-normal">{product.category?.name || 'N/A'}</td>
-                      <td className="py-3 px-3 w-28 whitespace-normal">{product.subcategory?.sub_category_name || 'N/A'}</td>
-                      <td className="py-3 px-3 w-24 whitespace-normal">{product.brand?.brand_name || 'N/A'}</td>
-                      <td className="py-3 px-3 w-20">{product.quantity}</td>
-                      <td className="py-3 px-3 w-32">
-                        <div className="flex flex-col space-y-2">
+                      <td className="py-3 px-4 max-w-xs whitespace-normal">{product.name}</td>
+                      <td className="py-3 px-4 w-24 whitespace-normal">{product.product_code}</td>
+                      <td className="py-3 px-4 w-20 whitespace-normal">{parseFloat(product.price).toFixed(2)}</td>
+                      <td className="py-3 px-4 w-28 whitespace-normal">{product.category?.name || 'N/A'}</td>
+                      <td className="py-3 px-4 w-28 whitespace-normal">{product.subcategory?.sub_category_name || 'N/A'}</td>
+                      <td className="py-3 px-4 w-24 whitespace-normal">{product.brand?.brand_name || 'N/A'}</td>
+                      <td className="py-3 px-4 w-20">{product.quantity}</td>
+                      <td className="py-3 px-4 w-32">
+                        <div className="flex gap-2">
                           <button
                             onClick={() => handleViewUpdate(product.id)}
-                            className={`py-1 px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} transition-all duration-200`}
+                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-all duration-200`}
+                            title="View/Update"
                           >
-                            View/Update
+                            <FaEye />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(product.id)}
-                            className={`py-1 px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} transition-all duration-200`}
+                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-200`}
+                            title="Delete"
                           >
-                            Delete
+                            <FaTrash />
                           </button>
                         </div>
                       </td>
@@ -249,7 +252,7 @@ const ViewSpecialOfferProduct = ({ auth, products, categories, subcategories, br
                   ))}
                   {products.data.length === 0 && (
                     <tr>
-                      <td colSpan="10" className={`py-4 px-3 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      <td colSpan="10" className={`py-4 px-4 text-center ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         No products found.
                       </td>
                     </tr>

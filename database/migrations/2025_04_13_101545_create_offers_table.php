@@ -14,9 +14,8 @@ return new class extends Migration
             $table->enum('discount_type', ['unlimited', 'fixed']);
             $table->decimal('offer_price', 8, 2);
             $table->decimal('discount_value', 8, 2);
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->string('is_active')->default('no');
+            $table->dateTime('start_date')->nullable();
+            $table->dateTime('end_date')->nullable();
             $table->timestamps();
         });
     }

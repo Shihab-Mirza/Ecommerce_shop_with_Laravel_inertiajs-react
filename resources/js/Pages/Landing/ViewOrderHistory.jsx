@@ -1,9 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoppingCart, faShoppingBag } from '@fortawesome/free-solid-svg-icons';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import CartModal from './CartModal';
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
@@ -31,10 +32,29 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   );
 };
 
-export default function ViewOrderHistory({ auth, orders, categories }) {
+export default function ViewOrderHistory({ auth, orders, categories, cartItems, cartCount, cartId, checkoutToken }) {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isItemsModalOpen, setIsItemsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [cartModalOpen, setCartModalOpen] = useState(false);
+  const [localCartItems, setLocalCartItems] = useState(cartItems || []);
+  const [localCartCount, setLocalCartCount] = useState(cartCount || 0);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+
+  // Sync cart items and count with props
+  useEffect(() => {
+    setLocalCartItems(cartItems || []);
+    setLocalCartCount(cartCount || 0);
+  }, [cartItems, cartCount]);
+
+  // Toggle cart modal
+  const toggleCartModal = () => {
+    setCartModalOpen((prev) => !prev);
+  };
+
+  const openLoginModal = () => {
+    // Placeholder for login modal trigger, passed to Navbar or CartModal if needed
+  };
 
   const handleViewDetails = (order) => {
     setSelectedOrder(order);
@@ -55,20 +75,54 @@ export default function ViewOrderHistory({ auth, orders, categories }) {
   return (
     <>
       <Head title="Order History" />
-      <Navbar auth={auth} categories={categories}  />
-      <div className="md:w-2/3 px-2 sm:px-4 lg:mt-0 mt-10 md:mt-16 sm:mt-16 lg:mr-7 "></div>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16">
+      <Navbar
+        auth={auth}
+        categories={categories}
+        cartCount={localCartCount}
+        toggleCartModal={toggleCartModal}
+        setPendingCheckout={setPendingCheckout}
+        cartId={cartId}
+        checkoutToken={checkoutToken}
+      />
+      <div className="md:w-2/3 px-2 sm:px-4 lg:mt-0 mt-10 md:mt-16 sm:mt-16 lg:mr-7"></div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-16 relative">
+        {/* Floating Cart Icon */}
+        <button
+          onClick={toggleCartModal}
+          className="fixed bottom-6 right-4 sm:bottom-8 sm:right-8 z-40 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full p-3 sm:p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110"
+        >
+          <FontAwesomeIcon icon={faShoppingCart} size="lg" />
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center">
+              {localCartCount}
+            </span>
+        </button>
+
+        {/* Cart Modal */}
+        <CartModal
+          isOpen={cartModalOpen}
+          toggleCartModal={toggleCartModal}
+          cartItems={localCartItems}
+          cartCount={localCartCount}
+          setCartItems={setLocalCartItems}
+          setCartCount={setLocalCartCount}
+          auth={auth}
+          cartId={cartId}
+          checkoutToken={checkoutToken}
+          setPendingCheckout={setPendingCheckout}
+          openLoginModal={openLoginModal}
+        />
+
         <h1 className="text-2xl sm:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-10 flex items-center gap-3">
           <FontAwesomeIcon icon={faShoppingCart} className="fa-lg text-gray-700" />
           Your Order History
         </h1>
         {orders.length === 0 ? (
-          <div className="text-center py-12 sm:py-20 bg-gray-50 rounded-2xl shadow-inner">
+          <div className="text-center py-4 sm:py-5">
             <FontAwesomeIcon icon={faShoppingCart} className="fa-3x sm:fa-4x text-gray-400 mb-4" />
             <p className="text-gray-600 text-lg sm:text-xl mb-4 sm:mb-6 font-medium">You haven't placed any orders yet.</p>
             <Link
               href="/"
-              className="inline-flex items-center px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-full hover:from-indigo-700 hover:to-indigo-800 transition duration-300 font-semibold shadow-lg text-sm sm:text-base"
+              className="inline-block px-8 py-3 bg-gradient-to-r from-gray-800 to-gray-900 text-white rounded-full hover:from-gray-900 hover:to-gray-950 transition duration-300 font-medium shadow-lg"
             >
               Start Shopping
               <FontAwesomeIcon icon={faShoppingCart} className="fa-sm ml-2" />
@@ -132,7 +186,7 @@ export default function ViewOrderHistory({ auth, orders, categories }) {
                     </button>
                     <button
                       onClick={() => handleViewItems(order)}
-                      className="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition duration-300 font-medium text-xs sm:text-sm"
+                      className="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 bg-green-500 text-white hover:bg-green-600 rounded-lg transition duration-300 font-medium text-xs sm:text-sm"
                     >
                       <FontAwesomeIcon icon={faShoppingCart} className="fa-sm mr-1 sm:mr-2" />
                       View Items

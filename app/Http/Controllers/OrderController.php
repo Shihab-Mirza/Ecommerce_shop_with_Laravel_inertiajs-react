@@ -5,6 +5,9 @@ use Inertia\Inertia;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\Orderitem;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\OrderCancel;
+use Barryvdh\DomPDF\Facade\Pdf;
 class OrderController extends Controller
 {
     public function index(Request $request)
@@ -44,11 +47,65 @@ class OrderController extends Controller
         ]);
     }
 
-    public function destroy($id)
+   public function cancel($id)
     {
         $order = Order::findOrFail($id);
-        $order->delete();
+        $order->status = 'cancelled';
+        $order->save();
+      Mail::to($order->email)->send(new OrderCancel($order));
 
-        return redirect()->route('orders.index')->with('success', 'Order deleted successfully');
+        return back()->with('success', 'Order cancelled successfully');
     }
+
+
+
+
+
+public function generateInvoice(Order $order)
+    {
+       $orderItems = $order->items()
+        ->with(['product' => function ($query) {
+            $query->select('id', 'name', 'price', 'image', 'is_offered_product')
+                ->with(['offer' => function ($query) {
+                    $query->select('offer_id', 'product_id', 'offer_price');
+                }]);
+        }])
+        ->get()
+        ->map(function ($item) {
+            $product = $item->product;
+            $offer = $product->offer ?? null;
+            $unitPrice = $product && $product->is_offered_product === 'yes' && $offer
+                ? (float)$offer->offer_price
+                : (float)$product->price;
+            $subTotal = $unitPrice * $item->quantity;
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $product ? $product->name : 'Unknown Product',
+                'quantity' => $item->quantity,
+                'price' => $product ? (float)$product->price : 0.0,
+                'is_offered_product' => $product ? $product->is_offered_product : 'no',
+                'offer_price' => $product && $product->is_offered_product === 'yes' && $offer ? (float)$offer->offer_price : null,
+                'unit_price' => $unitPrice,
+                'subtotal' => $subTotal,
+                'total_price' => $subTotal,
+            ];
+        })->toArray();
+
+        // Load the Blade view and pass data
+        $data = [
+            'order' => $order,
+            'orderItems' => $orderItems,
+        ];
+
+        // Generate PDF
+        $pdf = Pdf::loadView('OrderInvoice', $data);
+
+        // Stream the PDF to the browser
+        return $pdf->stream('invoice-'. now()->format('Y-m-d').$order->order_id.'.pdf');
+    }
+
+
+
 }

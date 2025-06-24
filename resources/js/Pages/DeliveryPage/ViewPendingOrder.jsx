@@ -3,7 +3,7 @@ import DeliveryNavbar from './DeliveryNavbar';
 import DeliverySidebar from './DeliverySidebar';
 import { Inertia } from '@inertiajs/inertia';
 
-const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
+const ViewPendingOrder = ({ auth, orders, search: initialSearch, flash, errors: serverErrors }) => {
     const [isProductsOpen, setIsProductsOpen] = useState(false);
     const [isHomepageOpen, setIsHomepageOpen] = useState(false);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -16,8 +16,8 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeLink, setActiveLink] = useState('/view_pending_orders');
     const [successMessage, setSuccessMessage] = useState(flash?.success || null);
-    const [otpInputs, setOtpInputs] = useState({}); // Store OTP inputs per order
-    const [errors, setErrors] = useState({}); // Store OTP validation errors
+    const [otpInputs, setOtpInputs] = useState({});
+    const [localErrors, setLocalErrors] = useState({}); // Local state for errors
 
     useEffect(() => {
         localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -39,9 +39,18 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
             const timer = setTimeout(() => setSuccessMessage(null), 5000);
             return () => clearTimeout(timer);
         }
-    }, [flash]);
+        // Merge server errors into local errors
+        if (serverErrors?.otp) {
+            setLocalErrors((prev) => ({ ...prev, general: serverErrors.otp }));
+            // Optionally clear after a timeout
+            const timer = setTimeout(() => {
+                setLocalErrors((prev) => ({ ...prev, general: null }));
+            }, 5000); // Show error for 5 seconds
+            return () => clearTimeout(timer);
+        }
+    }, [flash, serverErrors]);
 
-    const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+    const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
     const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -51,15 +60,6 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
             preserveState: true,
             preserveScroll: true,
         });
-    };
-
-    const handlePageChange = (url) => {
-        if (url) {
-            Inertia.get(url, {}, {
-                preserveState: true,
-                preserveScroll: true,
-            });
-        }
     };
 
     const getSerialNumber = (index) => {
@@ -73,10 +73,10 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                console.log('OTP generated successfully');
+                setLocalErrors((prev) => ({ ...prev, [orderId]: null })); // Clear error for this order
             },
             onError: (errors) => {
-                console.error('Error generating OTP:', errors);
+                setLocalErrors((prev) => ({ ...prev, [orderId]: errors.otp || 'Failed to generate OTP' }));
             },
         });
     };
@@ -84,7 +84,7 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
     const handleVerifyOtp = (orderId) => {
         const otp = otpInputs[orderId];
         if (!otp || otp.length !== 5 || !/^\d+$/.test(otp)) {
-            setErrors(prev => ({ ...prev, [orderId]: 'Please enter a valid 5-digit OTP' }));
+            setLocalErrors((prev) => ({ ...prev, [orderId]: 'Please enter a valid 5-digit OTP' }));
             return;
         }
 
@@ -92,20 +92,18 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
-                setOtpInputs(prev => ({ ...prev, [orderId]: '' }));
-                setErrors(prev => ({ ...prev, [orderId]: null }));
-                console.log('OTP verified successfully');
+                setOtpInputs((prev) => ({ ...prev, [orderId]: '' }));
+                setLocalErrors((prev) => ({ ...prev, [orderId]: null }));
             },
             onError: (errors) => {
-                setErrors(prev => ({ ...prev, [orderId]: errors.otp || 'Error verifying OTP' }));
-                console.error('Error verifying OTP:', errors);
+                setLocalErrors((prev) => ({ ...prev, [orderId]: errors.otp || 'Failed to verify OTP' }));
             },
         });
     };
 
     const handleOtpInputChange = (orderId, value) => {
-        setOtpInputs(prev => ({ ...prev, [orderId]: value }));
-        setErrors(prev => ({ ...prev, [orderId]: null }));
+        setOtpInputs((prev) => ({ ...prev, [orderId]: value }));
+        setLocalErrors((prev) => ({ ...prev, [orderId]: null })); // Clear error when user types
     };
 
     const dismissSuccessMessage = () => setSuccessMessage(null);
@@ -143,7 +141,11 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
                         <h2 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-800'} mb-6`}>
                             View Pending Orders
                         </h2>
-
+                        {flash.otp_error && (
+                            <div className="w-full p-3 md:p-4 rounded-lg shadow-lg flex items-center gap-3 z-50 bg-red-100 border-red-500 text-red-800 border-l-4">
+                                {flash.otp_error}
+                            </div>
+                        )}
                         {successMessage && (
                             <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 border border-green-300 flex justify-between items-center">
                                 <span>{successMessage}</span>
@@ -152,7 +154,9 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
                                 </button>
                             </div>
                         )}
-
+                        {localErrors.general && (
+                            <div className="text-red-600 text-sm mt-1">{localErrors.general}</div>
+                        )}
                         <form onSubmit={handleSearch} className="mb-6">
                             <div className="flex items-center">
                                 <input
@@ -225,8 +229,8 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
                                                             Submit OTP
                                                         </button>
                                                     </div>
-                                                    {errors[order.order_id] && (
-                                                        <span className="text-red-500 text-xs">{errors[order.order_id]}</span>
+                                                    {localErrors[order.order_id] && (
+                                                        <span className="text-red-500 text-xs">{localErrors[order.order_id]}</span>
                                                     )}
                                                 </div>
                                             </td>
@@ -266,4 +270,4 @@ const ViewDeliveredOrder = ({ auth, orders, search: initialSearch, flash }) => {
     );
 };
 
-export default ViewDeliveredOrder;
+export default ViewPendingOrder;

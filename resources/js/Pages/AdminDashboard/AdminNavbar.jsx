@@ -41,25 +41,16 @@ const AdminNavbar = ({
                             <FontAwesomeIcon icon={faBars} className="text-xl" />
                         </button>
                         <h1 className={`text-xl sm:text-2xl font-extrabold bg-clip-text text-transparent ${isDarkMode ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500' : 'bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500'} animate-pulse tracking-wider`}>
-                            Computer Store
+                            Tech Store
                         </h1>
                     </div>
                     <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6">
                         <div className="relative group hidden sm:block">
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className={`px-3 py-2 sm:px-4 sm:py-2 ${isDarkMode ? 'text-gray-200 bg-gray-800/50 border-gray-700' : 'text-gray-800 bg-gray-100 border-gray-300'} border rounded-full focus:outline-none focus:ring-2 ${isDarkMode ? 'focus:ring-purple-500 focus:bg-gray-900' : 'focus:ring-blue-400 focus:bg-white'} transition-all duration-300 group-hover:w-48 sm:group-hover:w-64 w-40 sm:w-48`}
-                            />
-                            <button className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
-                                <FontAwesomeIcon icon={faSearch} className={`${isDarkMode ? 'text-blue-400 hover:text-purple-500' : 'text-blue-500 hover:text-indigo-500'}`} />
-                            </button>
+
+
                         </div>
                         <button className={`p-2 sm:p-3 rounded-full ${isDarkMode ? 'bg-gray-800/50 hover:bg-gradient-to-br hover:from-blue-600 hover:to-purple-600' : 'bg-gray-100 hover:bg-gradient-to-br hover:from-blue-400 hover:to-indigo-500'} transform hover:scale-110 transition-all duration-300 group relative`}>
                             <FontAwesomeIcon icon={faBell} className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} group-hover:text-white`} />
-                            <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs flex items-center justify-center text-white opacity-75">3</span>
                         </button>
                         <button
                             onClick={toggleDarkMode}
@@ -77,7 +68,7 @@ const AdminNavbar = ({
                             {isProfileOpen && (
                                 <div className={`absolute right-0 mt-3 w-48 sm:w-56 ${isDarkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'} backdrop-blur-md shadow-xl rounded-xl py-3 border animate-fade-in`}>
                                     <InertiaLink
-                                        href="/profile"
+                                        href="/admin_profile"
                                         className={`block px-4 sm:px-5 py-2 ${isDarkMode ? 'text-gray-200 border-b-gray-800' : 'text-gray-800 border-b-gray-200'} font-medium border-b`}
                                     >
                                         {auth.user.name}

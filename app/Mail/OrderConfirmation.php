@@ -8,22 +8,27 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Order;
+
 class OrderConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $order; // Public property to hold the order
+    public $order;
+    public $orderItems; // Add property for order items
 
     /**
      * Create a new message instance.
      *
      * @param  Order  $order
+     * @param  array  $orderItems
      * @return void
      */
-    public function __construct(Order $order)
+    public function __construct(Order $order, array $orderItems)
     {
-      $this->order = $order; // Store the order
+        $this->order = $order;
+        $this->orderItems = $orderItems; // Store order items
     }
+
     public function envelope(): Envelope
     {
         return new Envelope(

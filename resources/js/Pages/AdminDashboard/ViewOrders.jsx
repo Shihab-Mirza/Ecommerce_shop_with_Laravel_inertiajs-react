@@ -2,10 +2,38 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEye, FaFileInvoice, FaTimes } from 'react-icons/fa';
+
+// Modal Component
+const Modal = ({ isOpen, onClose, onConfirm, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 transition-opacity duration-300">
+      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-100">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">{message}</h3>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="px-6 py-2 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition duration-200 font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition duration-200 font-medium"
+          >
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
-    const [isProductsOpen, setIsProductsOpen] = useState(false); // Products menu starts collapsed
-    const [isHomepageOpen, setIsHomepageOpen] = useState(true); // Homepage menu starts open
+    const [isProductsOpen, setIsProductsOpen] = useState(false);
+    const [isHomepageOpen, setIsHomepageOpen] = useState(true);
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState(initialSearch || '');
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -16,6 +44,8 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeLink, setActiveLink] = useState('view_orders');
     const [successMessage, setSuccessMessage] = useState(flash?.success || null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
 
     useEffect(() => {
         localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -45,7 +75,6 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
 
     const handleSearch = (e) => {
         e.preventDefault();
-        console.log('Searching for:', searchQuery);
         Inertia.get('/view_orders', { search: searchQuery }, {
             preserveState: true,
             preserveScroll: true,
@@ -71,20 +100,36 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
         Inertia.get(`/orders/${orderId}/items`);
     };
 
-    const handleDelete = (orderId) => {
-        if (confirm('Are you sure you want to delete this order?')) {
-            Inertia.delete(`/orders/${orderId}`, {
+    const handleViewInvoice = (orderId) => {
+        Inertia.get(`/orders/${orderId}/invoice`);
+    };
+
+    const handleCancelClick = (orderId) => {
+        setSelectedOrderId(orderId);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmCancel = () => {
+        if (selectedOrderId) {
+            Inertia.post(`/orders/${selectedOrderId}/cancel`, {}, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
-                    console.log('Order deleted successfully');
-                    setSuccessMessage('Order deleted successfully!');
+                    setSuccessMessage('Order cancelled');
+                    setIsModalOpen(false);
+                    setSelectedOrderId(null);
                 },
-                onError: (errors) => {
-                    console.error('Error deleting order:', errors);
+                onError: () => {
+                    setIsModalOpen(false);
+                    setSelectedOrderId(null);
                 },
             });
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedOrderId(null);
     };
 
     const dismissSuccessMessage = () => setSuccessMessage(null);
@@ -154,16 +199,16 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
                             <table className={`w-full table-auto text-sm ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} border-collapse`}>
                                 <thead className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} sticky top-0 z-10`}>
                                     <tr>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[60px] ">SI</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Order ID</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Name</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Email</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Phone</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[80px] ">Amount</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[150px] ">Address</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px] ">Payment Status</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Transaction ID</th>
-                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px] ">Actions</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[60px]">SI</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px]">Order ID</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px]">Name</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px]">Email</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px]">Phone</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[80px]">Amount</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[150px]">Address</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[100px]">Status</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px]">Transaction ID</th>
+                                        <th className="py-2 px-2 sm:px-3 text-left font-semibold text-base max-w-[120px]">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -182,19 +227,32 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
                                             <td className="py-2 px-2 sm:px-3 max-w-[100px] whitespace-normal break-all">{order.status}</td>
                                             <td className="py-2 px-2 sm:px-3 max-w-[120px] whitespace-normal break-all">{order.transaction_id || 'N/A'}</td>
                                             <td className="py-2 px-2 sm:px-3 max-w-[120px]">
-                                                <div className="flex flex-col space-y-2">
+                                                <div className="flex space-x-2">
                                                     <button
                                                         onClick={() => handleViewUpdate(order.id)}
-                                                        className={`py-1 px-2 sm:px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} transition-all duration-200`}
+                                                        className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-all duration-200`}
+                                                        title="View items"
                                                     >
-                                                        View items
+                                                        <FaEye />
                                                     </button>
-                                                    <button
-                                                        onClick={() => handleDelete(order.id)}
-                                                        className={`py-1 px-2 sm:px-3 rounded-lg text-xs font-semibold text-white ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} transition-all duration-200`}
-                                                    >
-                                                        Delete
-                                                    </button>
+                                                    {['processing', 'completed'].includes(order.status.toLowerCase()) && (
+                                                        <button
+                                                            onClick={() => handleViewInvoice(order.id)}
+                                                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                                                            title="Print Invoice"
+                                                        >
+                                                            <FaFileInvoice />
+                                                        </button>
+                                                    )}
+                                                    {order.status.toLowerCase() !== 'cancelled' && (
+                                                        <button
+                                                            onClick={() => handleCancelClick(order.id)}
+                                                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-200`}
+                                                            title="Cancel"
+                                                        >
+                                                            <FaTimes />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
@@ -229,6 +287,12 @@ const ViewOrders = ({ auth, orders, search: initialSearch, flash }) => {
                     </div>
                 </main>
             </div>
+            <Modal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onConfirm={handleConfirmCancel}
+                message="Are you sure you want to cancel this order?"
+            />
         </div>
     );
 };

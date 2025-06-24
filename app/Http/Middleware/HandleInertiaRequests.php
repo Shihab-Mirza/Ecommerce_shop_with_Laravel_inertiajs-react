@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Models\Category;
 use App\Models\Cart;
+use App\Models\Footer;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -55,8 +56,8 @@ class HandleInertiaRequests extends Middleware
                             'id' => $item->id,
                             'product_id' => $item->product_id,
                             'product_name' => $product ? $product->name : 'Unknown Product',
-                            'quantity' => $item->quantity, // Cart item quantity
-                            'available_stock' => $product ? (int)$product->quantity : 0, // Product stock from products table
+                            'quantity' => $item->quantity,
+                            'available_stock' => $product ? (int)$product->quantity : 0,
                             'price' => $product ? (float)$product->price : 0.0,
                             'offer_price' => $product && $product->is_offered_product === 'yes' ? (float)$offer->offer_price : null,
                             'is_offered_product' => $product ? $product->is_offered_product : 'no',
@@ -75,6 +76,13 @@ class HandleInertiaRequests extends Middleware
             // Silently handle the exception without logging
         }
 
+        // Fetch footer data
+        $footer = Footer::first() ?? [
+            'facebook_link' => '#',
+            'contact_number' => '+8801237289284248',
+            'address' => 'Dhaka-1230'
+        ];
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -85,13 +93,18 @@ class HandleInertiaRequests extends Middleware
             'cartItems' => $cartItems,
             'checkoutToken' => $checkoutToken,
             'cartId' => $cartId,
-             'flash' => [
-            'success' => fn () => $request->session()->get('success'),
-            'error' => fn () => $request->session()->get('error'),
-             'review_success' => fn () => $request->session()->get('review_success'),
-             'review_error' => fn () => $request->session()->get('review_error'),
-
-        ],
+            'footer' => [
+                'facebook_link' => $footer['facebook_link'],
+                'contact_number' => $footer['contact_number'],
+                'address' => $footer['address'],
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'review_success' => fn () => $request->session()->get('review_success'),
+                'review_error' => fn () => $request->session()->get('review_error'),
+            ],
+            'errors' => fn () => $request->session()->get('errors') ? $request->session()->get('errors')->getBag('default')->getMessages() : (object) [],
         ];
     }
 }

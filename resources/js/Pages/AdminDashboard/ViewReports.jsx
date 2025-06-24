@@ -3,27 +3,7 @@ import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { InertiaLink } from '@inertiajs/inertia-react';
 
-const Modal = ({ isOpen, onClose, message }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 transition-opacity duration-300">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl transform transition-all duration-300 scale-100">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">{message}</h3>
-        <div className="flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-6 py-2 bg-gray-100 text-gray-800 rounded-full hover:bg-gray-200 transition duration-200 font-medium"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ViewReports = ({ auth, errors: initialErrors = {}, flash }) => {
+const ViewReports = ({ auth }) => {
   const [isProductsOpen, setIsProductsOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,11 +15,7 @@ const ViewReports = ({ auth, errors: initialErrors = {}, flash }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [validationErrors, setValidationErrors] = useState(initialErrors);
-  const [successMessage, setSuccessMessage] = useState(flash || null);
   const [activeLink, setActiveLink] = useState('view_reports');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMessage, setModalMessage] = useState("");
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -55,29 +31,9 @@ const ViewReports = ({ auth, errors: initialErrors = {}, flash }) => {
     };
   }, [isDarkMode]);
 
-  useEffect(() => {
-    // Handle validation errors from Inertia
-    if (Object.keys(initialErrors).length > 0) {
-      setValidationErrors(initialErrors);
-      if (initialErrors.message) {
-        setModalMessage(initialErrors.message);
-        setIsModalOpen(true);
-      }
-    }
-  }, [initialErrors]);
-
   const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
   const toggleSidebar = () => setIsSidebarMinimized(!isSidebarMinimized);
   const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
-  const dismissSuccessMessage = () => {
-    setSuccessMessage(null);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setModalMessage("");
-  };
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-100'} transition-colors duration-300`}>
@@ -106,30 +62,7 @@ const ViewReports = ({ auth, errors: initialErrors = {}, flash }) => {
           className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 w-full ${isSidebarMinimized ? 'md:ml-16' : 'md:ml-72'}`}
         >
           <div className={`rounded-xl sm:rounded-2xl shadow-md p-4 sm:p-6 lg:p-8 transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Generate Reports</h2>
-
-            {successMessage && (
-              <div
-                className="mb-4 p-3 rounded-lg flex justify-between items-center bg-green-100 text-green-800 border-green-300"
-              >
-                <span>{successMessage}</span>
-                <button
-                  onClick={dismissSuccessMessage}
-                  className="text-green-800 hover:text-green-900 font-semibold focus:outline-none"
-                >
-                  ✕
-                </button>
-              </div>
-            )}
-
-            {Object.keys(validationErrors).length > 0 && (
-              <div className="mb-4 text-red-600">
-                {Object.values(validationErrors).map((error, index) => (
-                  <p key={index}>{error}</p>
-                ))}
-              </div>
-            )}
-
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Generate Business Activity Report</h2>
             <form className="mb-8">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex flex-col w-full sm:w-1/2">
@@ -167,11 +100,6 @@ const ViewReports = ({ auth, errors: initialErrors = {}, flash }) => {
           </div>
         </main>
       </div>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        message={modalMessage || "An error occurred while generating the report."}
-      />
     </div>
   );
 };

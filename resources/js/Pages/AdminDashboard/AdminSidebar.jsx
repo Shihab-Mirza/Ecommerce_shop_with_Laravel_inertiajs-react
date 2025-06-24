@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { InertiaLink } from '@inertiajs/inertia-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser, faTag, faShoppingCart, faGift, faStar } from '@fortawesome/free-solid-svg-icons';
+import { faTable, faBox, faChevronLeft, faChevronRight, faHome, faUser, faTag, faShoppingCart, faGift, faStar, faLink } from '@fortawesome/free-solid-svg-icons';
 
 const AdminSidebar = ({
     isSidebarMinimized,
@@ -50,6 +50,11 @@ const AdminSidebar = ({
         const isVouchersActive = ['add_vouchers', 'add_point_discounts', 'view_user_points'].includes(activeLink);
         return savedState ? JSON.parse(savedState) : isVouchersActive;
     });
+    const [isFooterOpen, setIsFooterOpen] = useState(() => {
+        const savedState = localStorage.getItem('isFooterOpen');
+        const isFooterActive = ['add_social'].includes(activeLink);
+        return savedState ? JSON.parse(savedState) : isFooterActive;
+    });
 
     useEffect(() => {
         localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -86,6 +91,10 @@ const AdminSidebar = ({
     }, [isVouchersOpen]);
 
     useEffect(() => {
+        localStorage.setItem('isFooterOpen', JSON.stringify(isFooterOpen));
+    }, [isFooterOpen]);
+
+    useEffect(() => {
         const isHomepageActive = [
             'add_image_slideshow',
             'add_featured_product',
@@ -108,6 +117,9 @@ const AdminSidebar = ({
 
         const isVouchersActive = ['add_vouchers', 'add_point_discounts', 'view_user_points'].includes(activeLink);
         setIsVouchersOpen((prev) => isVouchersActive || prev);
+
+        const isFooterActive = ['add_social'].includes(activeLink);
+        setIsFooterOpen((prev) => isFooterActive || prev);
     }, [activeLink]);
 
     return (
@@ -633,7 +645,7 @@ const AdminSidebar = ({
                             )}
                         </li>
                         <li>
-                           <button
+                            <button
                                 onClick={() => setIsUserRolesOpen(!isUserRolesOpen)}
                                 className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
                                     isDarkMode
@@ -643,7 +655,7 @@ const AdminSidebar = ({
                             >
                                 <div className="flex items-center">
                                     <FontAwesomeIcon icon={faUser} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
-                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">User Role Management</span>}
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">User Management</span>}
                                 </div>
                                 {!isSidebarMinimized && (
                                     <span className="transition-transform duration-300 text-xs sm:text-sm">
@@ -675,7 +687,49 @@ const AdminSidebar = ({
                                 </ul>
                             )}
                         </li>
-                        
+                        <li>
+                            <button
+                                onClick={() => setIsFooterOpen(!isFooterOpen)}
+                                className={`w-full flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3 ${
+                                    isDarkMode
+                                        ? 'text-gray-200 bg-gray-800/50 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600'
+                                        : 'text-gray-700 bg-gray-100 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                } rounded-xl transition-all duration-300 transform hover:scale-105`}
+                            >
+                                <div className="flex items-center">
+                                    <FontAwesomeIcon icon={faLink} className={isSidebarMinimized ? '' : 'mr-2 sm:mr-3'} />
+                                    {!isSidebarMinimized && <span className="text-sm sm:text-base">Manage Footer</span>}
+                                </div>
+                                {!isSidebarMinimized && (
+                                    <span className="transition-transform duration-300 text-xs sm:text-sm">
+                                        {isFooterOpen ? '▼' : '▶'}
+                                    </span>
+                                )}
+                            </button>
+                            {isFooterOpen && !isSidebarMinimized && (
+                                <ul className="ml-4 sm:ml-6 mt-2 space-y-2 animate-fade-in">
+                                    <li>
+                                        <InertiaLink
+                                            href="/add_social"
+                                            className={`block px-3 py-2 ${
+                                                isDarkMode
+                                                    ? 'text-gray-300 hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600 hover:text-white'
+                                                    : 'text-gray-600 hover:bg-gradient-to-r hover:from-blue-400 hover:to-indigo-500 hover:text-white'
+                                            } rounded-lg transition-all duration-200 transform hover:translate-x-1 text-sm ${
+                                                activeLink === 'add_social'
+                                                    ? isDarkMode
+                                                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
+                                                        : 'bg-gradient-to-r from-blue-400 to-indigo-500 text-white'
+                                                    : ''
+                                            }`}
+                                            onClick={() => setIsSidebarOpen(false)}
+                                        >
+                                            Add Social
+                                        </InertiaLink>
+                                    </li>
+                                </ul>
+                            )}
+                        </li>
                         <li>
                             <InertiaLink
                                 href="/view_reports"

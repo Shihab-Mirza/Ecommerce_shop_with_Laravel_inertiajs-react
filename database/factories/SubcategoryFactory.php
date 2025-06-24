@@ -10,8 +10,17 @@ class SubcategoryFactory extends Factory
     public function definition()
     {
         return [
-            'sub_category_name' => $this->faker->words(2, true), // e.g., "Smart Phones"
-            'category_id' => Category::factory(), // Creates a category if not provided
+            'sub_category_name' => $this->faker->word(),
+            'category_id' => Category::factory(),
         ];
+    }
+
+    // Custom state to set specific subcategory name and category
+    public function forCategory($categoryId, $subcategoryName)
+    {
+        return $this->state([
+            'sub_category_name' => $subcategoryName,
+            'category_id' => $categoryId,
+        ]);
     }
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEdit, FaTrash, FaSave } from 'react-icons/fa';
 
 const Modal = ({ isOpen, onClose, onConfirm, message }) => {
   if (!isOpen) return null;
@@ -56,11 +57,9 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
     const handleDarkModeChange = (event) => {
       setIsDarkMode(event.detail);
     };
-    window.addEventListener('darkModeChange', handleDarkModeChange);
+    window.addEventListener('keydown', handleDarkModeChange);
 
-    return () => {
-      window.removeEventListener('darkModeChange', handleDarkModeChange);
-    };
+    return () => window.removeEventListener('keydown', handleDarkModeChange);
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -177,7 +176,6 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
           toggleMobileSidebar={toggleMobileSidebar}
           isProductsOpen={isProductsOpen}
           setIsProductsOpen={setIsProductsOpen}
-          activeLink={activeLink}
         />
         <main
           className={`flex-1 p-4 sm:p-6 lg:p-8 transition-all duration-300 w-full ${isSidebarMinimized ? 'md:ml-16' : 'md:ml-72'}`}
@@ -189,15 +187,15 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
               <div
                 className={`mb-4 p-3 rounded-lg flex justify-between items-center ${
                   isDeleteMessage
-                    ? 'bg-red-100 text-red-800 border-red-300'
-                    : 'bg-green-100 text-green-800 border-green-300'
+                    ? 'bg-red-100 text-red-800 border-red-800 border'
+                    : 'bg-green-100 text-green-800 border-green-800'
                 }`}
               >
                 <span>{successMessage}</span>
                 <button
                   onClick={dismissSuccessMessage}
                   className={`${
-                    isDeleteMessage ? 'text-red-800 hover:text-red-900' : 'text-green-800 hover:text-green-900'
+                    isDeleteMessage ? 'text-red-800 hover:text-red-900' : 'text-green-600 hover:text-green-900'
                   } font-semibold focus:outline-none`}
                 >
                   ✕
@@ -215,14 +213,16 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
 
             <form onSubmit={handleSubmit} className="mb-8">
               <div className="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text"
-                  value={categoryName}
-                  onChange={(e) => setCategoryName(e.target.value)}
-                  placeholder="Enter category name"
-                  className={`flex-1 p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                  required
-                />
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={categoryName}
+                    onChange={(e) => setCategoryName(e.target.value)}
+                    placeholder="Enter category name"
+                    className={`w-full flex-1 p-2 rounded-lg ${isDarkMode ? 'bg-gray-700 text-white border-gray-600' : 'bg-gray-100 text-gray-800 border-gray-300'} border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    required
+                  />
+                </div>
                 <button
                   type="submit"
                   className={`px-4 py-2 rounded-lg ${isDarkMode ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700' : 'bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600'} text-white font-semibold transition-all duration-300`}
@@ -257,15 +257,17 @@ const AddCategory = ({ auth, categories: initialCategories, errors: initialError
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleUpdate(category)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-300`}
+                          className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                          title={editingCategoryId === category.id ? 'Save' : 'Edit'}
                         >
-                          {editingCategoryId === category.id ? 'Save' : 'Edit'}
+                          {editingCategoryId === category.id ? <FaSave /> : <FaEdit />}
                         </button>
                         <button
                           onClick={() => handleDeleteClick(category.id)}
-                          className={`px-3 py-1 rounded-lg ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-300`}
+                          className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-red-600 hover:bg-red-700' : 'bg-red-500 hover:bg-red-600'} text-white transition-all duration-200`}
+                          title="Delete"
                         >
-                          Delete
+                          <FaTrash />
                         </button>
                       </div>
                     </li>

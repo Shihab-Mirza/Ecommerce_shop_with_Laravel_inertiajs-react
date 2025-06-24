@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AdminNavbar from './AdminNavbar';
 import AdminSidebar from './AdminSidebar';
 import { Inertia } from '@inertiajs/inertia';
+import { FaEdit, FaSave, FaTimes } from 'react-icons/fa';
 
 const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
     const [isDarkMode, setIsDarkMode] = useState(() => {
@@ -43,13 +44,31 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+        return date.toLocaleString('en-GB', {
+            timeZone: 'Asia/Dhaka',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        }).replace(',', '').replace(/(\d+\/.+) (\d+:\d+:\d+) ([AP]M)/, '$1 $2 $3');
     };
 
     const formatDateForInput = (dateString) => {
         if (!dateString) return '';
         const date = new Date(dateString);
-        return date.toISOString().split('T')[0];
+        const options = {
+            timeZone: 'Asia/Dhaka',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+        };
+        const [day, month, year] = date
+            .toLocaleString('en-GB', options)
+            .split('/')
+            .map(part => part.padStart(2, '0'));
+        return `${year}-${month}-${day}`;
     };
 
     const toggleDarkMode = () => {
@@ -64,15 +83,15 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
     const toggleMobileSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     const handleEdit = (product) => {
+        const currentDate = new Date().toISOString();
         setEditingProduct({
             ...product,
             offer: {
                 is_offered_product: product.is_offered_product || 'no',
                 discount_type: product.offer?.discount_type || 'unlimited',
                 offer_price: product.offer?.offer_price || '',
-                start_date: product.offer?.start_date || null,
+                start_date: product.offer?.start_date || currentDate,
                 end_date: product.offer?.end_date || null,
-                is_active: product.offer?.is_active || 'no',
             },
         });
         setErrors({});
@@ -93,9 +112,6 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
             editingProduct.offer.is_offered_product === 'yes' &&
             editingProduct.offer.discount_type === 'fixed'
         ) {
-            if (!editingProduct.offer.start_date) {
-                newErrors.start_date = 'Start date is required for fixed discounts.';
-            }
             if (!editingProduct.offer.end_date) {
                 newErrors.end_date = 'End date is required for fixed discounts.';
             }
@@ -106,7 +122,13 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
             return;
         }
 
-        Inertia.post('/offers/save', editingProduct, {
+        const { start_date, ...offerData } = editingProduct.offer;
+        const payload = {
+            ...editingProduct,
+            offer: offerData,
+        };
+
+        Inertia.post('/offers/save', payload, {
             preserveState: true,
             preserveScroll: true,
             onSuccess: () => {
@@ -116,6 +138,7 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
                 Inertia.get('/add_offer', { search: searchQuery }, {
                     preserveState: true,
                     preserveScroll: true,
+                    replace: true,
                 });
             },
             onError: (serverErrors) => {
@@ -130,11 +153,12 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
     };
 
     const updateOfferField = (field, value) => {
+        if (field === 'start_date') return;
+
         setEditingProduct((prev) => {
             const updatedOffer = { ...prev.offer, [field]: value };
 
             if (field === 'discount_type' && value === 'unlimited') {
-                updatedOffer.start_date = null;
                 updatedOffer.end_date = null;
             }
 
@@ -152,6 +176,7 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
         Inertia.get('/add_offer', { search: searchQuery }, {
             preserveState: true,
             preserveScroll: true,
+            replace: true,
         });
     };
 
@@ -225,10 +250,9 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
                                         <th className="py-3 px-3 text-left">Price</th>
                                         <th className="py-3 px-3 text-left">Is Offered</th>
                                         <th className="py-3 px-3 text-left">Offer Price</th>
-                                        <th className="py-3 px-3 text-left">Discount Type</th>
+                                        <th className="py-3 px-3 text-left">Discount type</th>
                                         <th className="py-3 px-3 text-left">Start Date</th>
                                         <th className="py-3 px-3 text-left">End Date</th>
-                                        <th className="py-3 px-3 text-left">Active</th>
                                         <th className="py-3 px-3 text-left">Actions</th>
                                     </tr>
                                 </thead>
@@ -298,8 +322,7 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
                                                             <input
                                                                 type="date"
                                                                 value={formatDateForInput(editingProduct.offer.start_date)}
-                                                                onChange={(e) => updateOfferField('start_date', e.target.value)}
-                                                                disabled={editingProduct.offer.is_offered_product === 'no' || editingProduct.offer.discount_type === 'unlimited'}
+                                                                readOnly
                                                                 className={`border rounded py-0.5 px-0 text-sm w-[107px] ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-gray-100 text-gray-800 border-gray-300'} ${errors.start_date ? 'border-red-500' : ''}`}
                                                             />
                                                             {errors.start_date && (
@@ -322,45 +345,38 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
                                                         </div>
                                                     </td>
                                                     <td className="py-3 px-3">
-                                                        <select
-                                                            value={editingProduct.offer.is_active}
-                                                            onChange={(e) => updateOfferField('is_active', e.target.value)}
-                                                            disabled={editingProduct.offer.is_offered_product === 'no'}
-                                                            className={`border rounded py-0.5 px-2 text-sm ${isDarkMode ? 'bg-gray-600 text-white border-gray-500' : 'bg-gray-100 text-gray-800 border-gray-300'}`}
-                                                        >
-                                                            <option value="yes">Yes</option>
-                                                            <option value="no">No</option>
-                                                        </select>
-                                                    </td>
-                                                    <td className="py-3 px-3">
-                                                        <button
-                                                            onClick={handleSave}
-                                                            className={`bg-green-500 text-white px-3 py-1 rounded mr-2 ${isDarkMode ? 'hover:bg-green-600' : 'hover:bg-green-600'}`}
-                                                        >
-                                                            Save
-                                                        </button>
-                                                        <button
-                                                            onClick={handleCancel}
-                                                            className={`bg-gray-500 text-white px-3 py-1 rounded ${isDarkMode ? 'hover:bg-gray-600' : 'hover:bg-gray-600'}`}
-                                                        >
-                                                            Cancel
-                                                        </button>
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                onClick={handleSave}
+                                                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'} text-white transition-all duration-200`}
+                                                                title="Save"
+                                                            >
+                                                                <FaSave />
+                                                            </button>
+                                                            <button
+                                                                onClick={handleCancel}
+                                                                className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-gray-600 hover:bg-gray-700' : 'bg-gray-500 hover:bg-gray-600'} text-white transition-all duration-200`}
+                                                                title="Cancel"
+                                                            >
+                                                                <FaTimes />
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </>
                                             ) : (
                                                 <>
                                                     <td className="py-3 px-3">{product.is_offered_product}</td>
-                                                    <td className="py-3 px-3">{product.offer?.offer_price ? `$${parseFloat(product.offer.offer_price).toFixed(2)}` : 'N/A'}</td>
+                                                    <td className="py-3 px-3">{product.offer?.offer_price ? `${parseFloat(product.offer.offer_price).toFixed(2)}` : 'N/A'}</td>
                                                     <td className="py-3 px-3">{product.offer?.discount_type || 'N/A'}</td>
                                                     <td className="py-3 px-3">{formatDate(product.offer?.start_date)}</td>
                                                     <td className="py-3 px-3">{formatDate(product.offer?.end_date)}</td>
-                                                    <td className="py-3 px-3">{product.offer?.is_active || 'No'}</td>
                                                     <td className="py-3 px-3">
                                                         <button
                                                             onClick={() => handleEdit(product)}
-                                                            className={`bg-blue-500 text-white px-3 py-1 rounded ${isDarkMode ? 'hover:bg-blue-600' : 'hover:bg-blue-600'}`}
+                                                            className={`p-2 rounded-lg text-sm ${isDarkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-blue-500 hover:bg-blue-600'} text-white transition-all duration-200`}
+                                                            title="Edit"
                                                         >
-                                                            Edit
+                                                            <FaEdit />
                                                         </button>
                                                     </td>
                                                 </>
@@ -386,7 +402,7 @@ const AddOffer = ({ auth, products, flash, search: initialSearch }) => {
                                 {products.links.map((link, index) => (
                                     <button
                                         key={index}
-                                        onClick={() => link.url && Inertia.get(link.url)}
+                                        onClick={() => link.url && Inertia.get(link.url, {}, { replace: true })}
                                         className={`py-1.5 px-4 rounded-lg text-sm font-medium ${link.active ? (isDarkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white') : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300')} ${!link.url ? 'cursor-not-allowed opacity-50' : ''} transition-all duration-200 shadow-sm hover:shadow-md`}
                                         disabled={!link.url}
                                         dangerouslySetInnerHTML={{ __html: link.label }}

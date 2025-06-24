@@ -14,6 +14,8 @@ use App\Models\Orderitem;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\DeliveryOtp;
+use App\Mail\InvoiceMail;
+
 class DeliveryController extends Controller
 {
      public function view_delivery_homepage() {
@@ -22,19 +24,22 @@ class DeliveryController extends Controller
         return Inertia::render('DeliveryPage/DeliveryHomePage', [
 
             'pendingOrderCount' => $pendingOrderCount,
+                        'flash' => session('otp_error'),
+
         ]);
     }
 
 
 
 
-     public function index(Request $request)
+    public function index(Request $request)
 {
     $search = $request->input('search');
 
-    // Query orders with pagination, search filtering, and not delivered status
+    // Query orders with pagination, search filtering, not delivered, and not cancelled
     $orders = Order::query()
         ->where('delivery_status', 'not delivered') // Filter for not delivered orders
+        ->where('status', '!=', 'cancelled') // Exclude cancelled orders
         ->when($search, function ($query, $search) {
             $query->where('order_id', 'like', "%{$search}%")
                 ->orWhere('name', 'like', "%{$search}%")
@@ -56,46 +61,98 @@ class DeliveryController extends Controller
     ]);
 }
 
-  public function generateOtp(Request $request, $order_id)
-    {
-        $order = Order::where('order_id', $order_id)->firstOrFail();
+public function generateOtp(Request $request, $order_id)
+{
+    $order = Order::where('order_id', $order_id)->firstOrFail();
 
-        // Generate a random 5-digit OTP
-        do {
-            $otp = mt_rand(10000, 99999);
-        } while (Order::where('delivery_otp', $otp)->exists());
+    // Generate a random 5-digit OTP
+    do {
+        $otp = mt_rand(10000, 99999);
+    } while (Order::where('delivery_otp', $otp)->exists());
 
-        // Update the order with the new OTP
-        $order->delivery_otp = $otp;
-        $order->save();
-        Mail::to($order->email)->send(new DeliveryOtp($order));
+    // Update the order with the new OTP and expires_at
+    $order->delivery_otp = $otp;
+    $order->expires_at = now()->addMinutes(5); // Set expiration to current time + 5 minutes
+    $order->save();
 
-        // Optionally, send the OTP to the customer (e.g., via email or SMS)
-        // Example: Mail::to($order->email)->send(new OtpMail($otp));
+    // Send OTP to customer via email
+    Mail::to($order->email)->send(new DeliveryOtp($order));
 
-        return redirect()->route('pending.order')->with('success', 'OTP sent to customer successfully!');
+    return redirect()->route('pending.order')->with('success', 'OTP sent to customer successfully!');
+}
+
+   public function verifyOtp(Request $request, $order_id)
+{
+    $request->validate([
+        'otp' => 'required|digits:5',
+    ]);
+
+    $order = Order::where('order_id', $order_id)->firstOrFail();
+
+    // Check if OTP has expired
+    if ($order->expires_at && now()->greaterThan($order->expires_at)) {
+        return back()->withErrors( ['otp' =>'OTP has expired. Please request a new one.']);
     }
 
-       public function verifyOtp(Request $request, $order_id)
-    {
-        $request->validate([
-            'otp' => 'required|digits:5',
-        ]);
+    // Check if OTP is valid
+    if ($order->delivery_otp != $request->otp) {
+         return back()->withErrors(['otp' => 'Invalid OTP.']);
+    }
 
-        $order = Order::where('order_id', $order_id)->firstOrFail();
+    // Mark the order as completed
+    $order->delivery_status = 'delivered';
+    $order->status = 'Completed';
+    $order->delivery_otp = null; // Clear the OTP
+    $order->expires_at = null; // Clear the expiration time
+    $order->save();
 
-        if ($order->delivery_otp != $request->otp) {
-            return redirect()->route('pending.order')->withErrors(['otp' => 'Invalid OTP.']);
+    // Update product quantities
+    foreach ($order->items as $orderItem) {
+        $product = $orderItem->product;
+        if ($product) {
+            $product->quantity -= $orderItem->quantity;
+            $product->save();
         }
-
-        // Mark the order as completed
-        $order->delivery_status = 'delivered';
-        $order->status ='Completed';
-        $order->delivery_otp = null; // Clear the OTP
-        $order->save();
-
-        return redirect()->route('completed.order')->with('success', 'Order completed successfully!');
     }
+
+    $order = Order::where('id', $order->id)->first();
+    $orderItems = $order->items()
+        ->with(['product' => function ($query) {
+            $query->select('id', 'name', 'price', 'image', 'is_offered_product')
+                ->with(['offer' => function ($query) {
+                    $query->select('offer_id', 'product_id', 'offer_price');
+                }]);
+        }])
+        ->get()
+        ->map(function ($item) {
+            $product = $item->product;
+            $offer = $product->offer ?? null;
+            $unitPrice = $product && $product->is_offered_product === 'yes' && $offer
+                ? (float)$offer->offer_price
+                : (float)$product->price;
+            $subTotal = $unitPrice * $item->quantity;
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'product_name' => $product ? $product->name : 'Unknown Product',
+                'product_image' => $product->image ? asset('storage/' . $product->image) : null,
+                'quantity' => $item->quantity,
+                'price' => $product ? (float)$product->price : 0.0,
+                'is_offered_product' => $product ? $product->is_offered_product : 'no',
+                'offer_price' => $product && $product->is_offered_product === 'yes' && $offer ? (float)$offer->offer_price : null,
+                'unit_price' => $unitPrice,
+                'subtotal' => $subTotal,
+                'total_price' => $subTotal,
+
+            ];
+        })->toArray();
+
+    // Send order confirmation email
+    Mail::to($order->email)->send(new InvoiceMail($order, $orderItems));
+
+    return redirect()->route('completed.order')->with('success', 'Order completed successfully!');
+}
   public function view_completed_order(Request $request)
 {
     $search = $request->input('search');
@@ -120,6 +177,8 @@ class DeliveryController extends Controller
         'search' => $search,
         'flash' => [
             'success' => session('success'),
+                   'otp_error' => session('otp_error'),
+
         ],
     ]);
 }
